@@ -1,3 +1,4 @@
 .obsidian
 .cache
 .theia
+compile_commands.json
