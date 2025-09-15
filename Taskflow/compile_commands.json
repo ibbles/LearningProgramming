@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/media/s1300/workspaces/taskflow_notes",
+  "command": "/usr/bin/g++ -isystem /media/s1300/workspaces/taskflow_notes/taskflow -fsanitize=thread -g -std=c++20 -o CMakeFiles/a_simple_example.dir/a_simple_example.cpp.o -c /media/s1300/mirrored/study/ComputerScience/LearningProgramming/Taskflow/a_simple_example.cpp",
+  "file": "/media/s1300/mirrored/study/ComputerScience/LearningProgramming/Taskflow/a_simple_example.cpp",
+  "output": "CMakeFiles/a_simple_example.dir/a_simple_example.cpp.o"
+},
+{
+  "directory": "/media/s1300/workspaces/taskflow_notes",
+  "command": "/usr/bin/g++ -isystem /media/s1300/workspaces/taskflow_notes/taskflow -fsanitize=thread -g -std=c++20 -o CMakeFiles/creating_dependencies.dir/creating_dependencies.cpp.o -c /media/s1300/mirrored/study/ComputerScience/LearningProgramming/Taskflow/creating_dependencies.cpp",
+  "file": "/media/s1300/mirrored/study/ComputerScience/LearningProgramming/Taskflow/creating_dependencies.cpp",
+  "output": "CMakeFiles/creating_dependencies.dir/creating_dependencies.cpp.o"
+},
+{
+  "directory": "/media/s1300/workspaces/taskflow_notes",
+  "command": "/usr/bin/g++ -isystem /media/s1300/workspaces/taskflow_notes/taskflow -fsanitize=thread -g -std=c++20 -o CMakeFiles/creating_multiple_tasks.dir/creating_multiple_tasks.cpp.o -c /media/s1300/mirrored/study/ComputerScience/LearningProgramming/Taskflow/creating_multiple_tasks.cpp",
+  "file": "/media/s1300/mirrored/study/ComputerScience/LearningProgramming/Taskflow/creating_multiple_tasks.cpp",
+  "output": "CMakeFiles/creating_multiple_tasks.dir/creating_multiple_tasks.cpp.o"
+},
+{
+  "directory": "/media/s1300/workspaces/taskflow_notes",
+  "command": "/usr/bin/g++ -isystem /media/s1300/workspaces/taskflow_notes/taskflow -fsanitize=thread -g -std=c++20 -o CMakeFiles/dynamic_task.dir/dynamic_task.cpp.o -c /media/s1300/mirrored/study/ComputerScience/LearningProgramming/Taskflow/dynamic_task.cpp",
+  "file": "/media/s1300/mirrored/study/ComputerScience/LearningProgramming/Taskflow/dynamic_task.cpp",
+  "output": "CMakeFiles/dynamic_task.dir/dynamic_task.cpp.o"
+}
+]
