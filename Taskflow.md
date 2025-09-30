@@ -1,8 +1,12 @@
 Taskflow is a task graph computing system.
 This means that instead of chaining functions together as the program is executed the structure of the program is defined up-front in a task graph that is executed by a runtime.
-Taskflow is an API for defining task graphs and a runtime for executing them.
-These two concepts are codified in two types:
-- `tf::Taskflow`: A task graph.
+The following is an example graph from the Taskflow paper [(1)](https://taskflow.github.io/papers/tpds21-taskflow.pdf), we will dive into  what the different symbols mean throughout this note.
+![](./images/taskflow/example_task_graph.jpg)
+
+The Taskflow C++ library provides an API for defining tasks, task graphs, and a runtime for executing them.
+These concepts are codified in three types:
+- `tf::Task`: A representation of a piece of work.
+- `tf::Taskflow`: A collection of tasks and their dependencies.
 - `tf::Executor`: A runtime for executing task graphs.
 
 Taskflow provides a number of different task types with different features and characteristics.
@@ -14,7 +18,7 @@ Taskflow provides a number of different task types with different features and c
 
 # A Simple Example
 
-Let's look at the simplest possible example, a task graph that contains a single task that calls a function.
+Let's look at the simplest possible example, a task graph that contains a single task that calls a free function.
 
 ```cpp
 // Taskflow includes.
@@ -23,7 +27,7 @@ Let's look at the simplest possible example, a task graph that contains a single
 // Standard library includes.
 #include <iostream>
 
-void task() { std::cout << "A task.\n"; }
+void work() { std::cout << "Doing work.\n"; }
 
 int main()
 {
@@ -36,22 +40,27 @@ int main()
 ```
 
 We can see the central parts of a Taskflow program:
-- A task to perform.
-	- In this case the work done by the task is to print `A task.` and the implementation of the task is a function named `task`.
+- Some work to perform.
+	- In this case the work is to print `Doing work.` and the implementation is a function named `work`.
 - An instance of the `tf::Executor` class, here named `executor`.
 - An instance of the `tf::Taskflow` class, here named `taskflow`.
-- The `task` function being emplaced into the taskflow.
+- The `work` function being emplaced into the taskflow, creating an internal `tf::Task` instance.
 - The executor running the taskflow and waiting for it to complete.
+
+The task graph produced by this code consists, as expected, of a single task:
+![](./images/taskflow/a_simple_example.jpg)
+
+To generate the the figure the example code was extended with some additional statements to assign names to the Taskflow and the Task and to generate the figure.
 
 
 # Creating Tasks
 
-A task is any callable, such as a regular function, that does not take any arguments.
-To create an actual task we call the `emplace` member function of the `tf::Taskflow` that should  own the task.
+A task is any callable, such as a regular function, a lambda expression, or an instance of a type with a call operator, that does not take any arguments.
+To create an actual `tf::Task` instance we call the `emplace` member function of the `tf::Taskflow` instance that should  own the task.
 This creates a `tf::Task` instance stored inside the `tf::Taskflow`.
-When a `tf::Taskflow` is run by an executor then the tasks within that `tf::Taskflow`  is executed.
-The return value of `tf::Taskflow::emplace` is one or more `tf::Task`.
-The `tf::Task` objects can be used to configure the created task, for example to add dependencies to other tasks.
+The return value of `tf::Taskflow::emplace` is one or more `tf::Task` instances, one for each callable passed.
+The `tf::Task` instances can be used to configure the created tasks, for example to add dependencies to other tasks or assign names to the tasks.
+When a `tf::Taskflow` is run by an executor then the tasks within that `tf::Taskflow` are executed, meaning that the callables held by the tasks are invoked by the runtime.
 
 
 # Creating Task Dependencies
@@ -69,15 +78,15 @@ We create these dependencies using member functions on `tf::Task`.
 // Standard library includes.
 #include <iostream>
 
-void first_task() { std::cout << "First task.\n"; }
-void second_task() { std::cout << "Second task.\n"; }
+void first_work() { std::cout << "First work.\n"; }
+void second_work() { std::cout << "Second work.\n"; }
 
 int main()
 {
 	tf::Executor executor;
 	tf::Taskflow taskflow;
-	tf::Task first_task = taskflow.emplace(::first_task);
-	tf::Task second_task = taskflow.emplace(::second_task);
+	tf::Task first_task = taskflow.emplace(::first_work);
+	tf::Task second_task = taskflow.emplace(::second_work);
 	first_task.precede(second_task);
 	executor.run(taskflow).wait();
 	return 0;
@@ -104,18 +113,18 @@ Since there is  no dependencies between the parallel tasks they are allowed to  
 // Standard library includes.
 #include <iostream>
 
-void setup_task() {	std::cout << "Setup task.\n"; }
-void parallel_task_1() { std::cout << "Parallel task 1.\n"; }
-void parallel_task_2() { std::cout << "Parallel task 2.\n"; }
-void parallel_task_3() { std::cout << "Parallel task 3.\n"; }
-void teardown_task() { std::cout << "Teardown task.\n"; }
+void setup_work() {	std::cout << "Setup work.\n"; }
+void parallel_work_1() { std::cout << "Parallel work 1.\n"; }
+void parallel_work_2() { std::cout << "Parallel work 2.\n"; }
+void parallel_work_3() { std::cout << "Parallel work 3.\n"; }
+void teardown_task() { std::cout << "Teardown work.\n"; }
 
 int main()
 {
 	tf::Executor executor;
 	tf::Taskflow taskflow;
 	auto [setup, parallel_1, parallel_2, parallel_3, teardown] = taskflow.emplace(
-		::setup_task, ::parallel_task_1, ::parallel_task_2, ::parallel_task_3, ::teardown_task);
+		::setup_work, ::parallel_work_1, ::parallel_work_2, ::parallel_work_3, ::teardown_work);
 	setup.precede(parallel_1, parallel_2, parallel_3);
 	teardown.succeed(parallel_1, parallel_2, parallel_3);
 	executor.run(taskflow).wait();
@@ -126,18 +135,18 @@ int main()
 
 # Creating Dynamic Tasks
 
-So far we have created static tasks, meaning that we know exactly what is going to be executed when `tf::Executor::run` is called.
+So far we have been creating static tasks, meaning that we know exactly what is going to be executed when `tf::Executor::run` is called.
 Dynamic tasks lets us defer the task creation until runtime, when parts of the task graph has already been executed.
 That is, an early task can communicate to a later task and influence the dynamic tasks that are created.
 
 We prepare for dynamic task creation by creating a task from a callable that takes a `tf::Subflow&` as its only parameter.
-`tf::Subflow` is similar to `tf::Taskflow` but instead of passing it to a `tf::Executor` for execution it is executed immediately following the task that created it.
+`tf::Subflow` is similar to `tf::Taskflow` but instead of passing it to a `tf::Executor` for execution it is executed immediately following the task it is associated with.
 The dynamic tasks are created much like regular tasks, by passing a callable to the `emplace` member function of `tf::Subflow`.
-We say that the task with the `tf::Subflow&` parameter is the parent task the the dynamic tasks are spawned from the parent task.
+We say that the task with the `tf::Subflow&` parameter is the parent task and the dynamic tasks, the child tasks, are spawned from the parent task.
 The dynamic tasks can have dependencies just like regular static tasks.
 
 The following exemplifies this with a dynamic task that is run as many times as the user requested in the input task.
-Notice that no thread synchronization on  the `global_state` variable is needed, Taskflow ensures that there is a synchronization between tasks with dependencies.
+Notice that no thread synchronization on  the `global_state` variable is needed, Taskflow ensures that there is a synchronization, a happens-before relationship, between tasks with dependencies.
 Since the input task precedes the dynamic task we are guaranteed that any side effects of the input task is visible in the dynamic task.
 
 ```cpp
@@ -150,7 +159,7 @@ Since the input task precedes the dynamic task we are guaranteed that any side e
 // Written in 'input_task', read in 'dynamic_task'.
 int global_state {0};
 
-void input_task()
+void input_work()
 {
 	std::cout << "How many dynamic tasks? ";
 	std::cin >> global_state;
@@ -158,16 +167,16 @@ void input_task()
 
 // This task is not scheduled in main, instead it is
 // scheduled by create_dynamic_tasks.
-void dynamic_task()
+void dynamic_work()
 {
-	std::cout << "Dynamic task.\n";
+	std::cout << "Dynamic work.\n";
 }
 
 void create_dynamic_tasks(tf::Subflow& subflow)
 {
 	for (int i = 0; i < global_state; ++i)
 	{
-		subflow.emplace(dynamic_task);
+		subflow.emplace(dynamic_work);
 	}
 }
 
@@ -183,7 +192,17 @@ int main()
 }
 ```
 
+Tasks that succeeds a parent task also succeeds the dynamic tasks spawned by that parent task.
+
+
+
+# Conditions And Loops
+
+Tasks need not be performed in a pure top-to-bottom order.
+Through conditions we can dynamically decide to only rum some branches of the graph, or run some parts multiple times.
+
 
 # References
 
 - 1: [_Taskflow: A Lightweight Parallel and Heterogeneous Task Graph Computing System_ by Tsun-Wei Huang et.al. 2022 @ taskflow.github.io](https://taskflow.github.io/papers/tpds21-taskflow.pdf)
+- 2: [_Taskflow QuickStart_ by Dr. Tsung-Wei Huang 2025 @ taskflow.github.io](https://taskflow.github.io/taskflow/index.html)
