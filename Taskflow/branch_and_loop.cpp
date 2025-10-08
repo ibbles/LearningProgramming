@@ -67,12 +67,12 @@ double get_residual_norm()
 	return std::sqrt((r[0] * r[0]) + (r[1] * r[1]));
 }
 
-void update_x()
+int update_x()
 {
 	x[0] = (b[0] - A[0][1] * x[1]) / A[0][0];
 	x[1] = (b[1] - A[1][0] * x[0]) / A[1][1];
 	++num_iterations;
-	//return 0;
+	return 0;
 }
 
 void print_result()
