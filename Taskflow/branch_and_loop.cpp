@@ -32,21 +32,17 @@ double next_double()
 
 void init_A()
 {
-	std::cout << "Enter init_A\n";
 	// Make diagonal larger to get a better condition number.
 	A[0][0] = next_double() + next_double();
 	A[0][1] = next_double();
 	A[1][0] = next_double();
 	A[1][1] = next_double() + next_double();
-	std::cout << "Exit init_A\n";
 }
 
 void init_x()
 {
-	std::cout << "Enter init_x\n";
 	x[0] = 0.0;
 	x[1] = 0.0;
-	std::cout << "Exit init_x\n";
 }
 
 void read_b()
@@ -61,11 +57,9 @@ double get_residual_norm();
 
 void compute_residual()
 {
-	std::cout << "Enter compute_residual\n";
 	r[0] = (A[0][0] * x[0] + A[0][1] * x[1]) - b[0];
 	r[1] = (A[1][0] * x[0] + A[1][1] * x[1]) - b[1];
 	trajectory.push_back({x[0], x[1], get_residual_norm()});
-	std::cout << "Exit compute_residual: " << r[0] << ", " << r[1] << "\n";
 }
 
 double get_residual_norm()
@@ -75,11 +69,9 @@ double get_residual_norm()
 
 void update_x()
 {
-	std::cout << "Enter update_x\n";
 	x[0] = (b[0] - A[0][1] * x[1]) / A[0][0];
 	x[1] = (b[1] - A[1][0] * x[0]) / A[1][1];
 	++num_iterations;
-	std::cout << "Exit update_x\n";
 	//return 0;
 }
 
@@ -134,12 +126,10 @@ int main()
 			constexpr int exit_loop {1};
 			if (num_iterations >= max_iterations || get_residual_norm() < 1e-6)
 			{
-				std::cout << "Should exit loop\n";
 				return exit_loop;
 			}
 			else
 			{
-				std::cout << "Should loop again\n";
 				return loop_again;
 			}
 		});
