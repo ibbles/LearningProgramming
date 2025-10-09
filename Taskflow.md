@@ -12,8 +12,13 @@ These concepts are codified in three types:
 Taskflow provides a number of different task types with different features and characteristics.
 - Static task: Basically just a callback.
 - Dynamic task: A task that creates nested / inner child-tasks at runtime.
-- Composite task: The inclusion of one `tf::Taskflow` into another.
 - Condition task: Runtime selection of which task should be executed next, possibly a prior task.
+- Composite task: The inclusion of one `tf::Taskflow` into another.
+
+The type a task has depends on the signature on the callback function associated with the task.
+A `void()` function creates a static task.
+A `void(tf::Subflow&)` function creates a dynamic task.
+An `int()` function creates a condition task.
 
 
 # A Simple Example
@@ -200,8 +205,96 @@ Tasks that succeeds a parent task also succeeds the dynamic tasks spawned by tha
 
 Tasks need not be performed in a pure top-to-bottom order.
 Through conditions we can dynamically decide to only rum some branches of the graph, or run some parts multiple times.
+That is, a Taskflow is not a DAG.
+There a are some caveats though that we will get to.
+
+Let's start with the basics.
 
 
+## If-Else
+
+A conditional task is one that chooses and schedules only one if its successors, all other successors are ignored.
+Remember that the successors are the tasks that the conditional task precedes.
+The selection is made based on the return value if the conditional task, which is an index  into the list of successors.
+In the following dependencies setup example we create a situation where if the conditional task returns 0 then the first task is scheduled, if the return value is 1 then the second task is scheduled, and so on for all successors.
+```cpp
+conditional_task.precede(first_task, second_task, third_task);
+```
+
+Let's look at a concrete example, one that reads an integer from standard input and prints a message indicating whether the number is even or odd.
+```cpp
+// Taskflow includes.
+#include <taskflow/taskflow.hpp>
+
+// Standard library includes.
+#include <iostream>
+
+static int number {0};
+
+void read_data()
+{
+	std::cout << "Data? ";
+	std::cin >> number;
+}
+
+int even_or_odd()
+{
+	return number % 2;
+}
+
+void print_even()
+{
+	std::cout << "Number " << number << " is even.\n";
+}
+
+void print_odd()
+{
+	std::cout << "Number " << number << " is odd.\n";
+}
+
+int main()
+{
+	tf::Taskflow taskflow;
+	tf::Executor executor;
+
+	tf::Task read_data = taskflow.emplace(::read_data);
+	tf::Task even_or_odd = taskflow.emplace(::even_or_odd);
+	tf::Task print_even = taskflow.emplace(::print_even);
+	tf::Task print_odd = taskflow.emplace(::print_odd);
+
+	read_data.precede(even_or_odd);
+	even_or_odd.precede(print_even, print_odd);
+
+	executor.run(taskflow).wait();
+	return 0;
+}
+```
+
+The important bits to note in the above example is that the `even_or_odd` function returns an `int` and that the return value is either 0 or 1.
+This maps to the two tasks that the `even_or_odd` task precedes: `print_even` and `print_odd`.
+If `number` is even then `number % 2` is 0 and if `number` is odd then `number % 2` is 1.
+The 0 and 1 return values index into the successor tasks of `even_or_odd`, which are `print_even` at index 0 and `print_odd` at index 1.
+
+The task graph is visualized as follows:
+
+![](./images/taskflow/branch.jpg)
+
+Notice how the the Even Or Odd node is a diamond instead of an ellipse, this indicates that it is a condition task.
+Notice how the dependency lines out of the condition task are dashed instead of solid, this indicates that these dependencies are _weak_ dependencies.
+Weak dependencies differ from the regular strong dependencies in that they sidestep the regular dependency management and schedule the dependee task immediately regardless of what other dependencies the dependee may have, and a task that has weak dependencies to it may be scheduled as soon as all strong dependencies have been resolved regardless of the state of the weak dependencies.
+This set of rules makes it possible to encode loops in the dependency system.
+
+![](./images/taskflow/weak_and_strong_dependencies.jpg)
+## Loop
+
+
+![](./images/taskflow/counter.jpg)
+
+# Observations
+
+- Main thread not used as a worker.
+	- Can we turn it into a worker?
+- Seems difficult to debug.
 # References
 
 - 1: [_Taskflow: A Lightweight Parallel and Heterogeneous Task Graph Computing System_ by Tsun-Wei Huang et.al. 2022 @ taskflow.github.io](https://taskflow.github.io/papers/tpds21-taskflow.pdf)
