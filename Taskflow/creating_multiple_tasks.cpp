@@ -1,3 +1,6 @@
+// Project includes.
+#include "utils.h"
+
 // Taskflow includes.
 #include "taskflow/taskflow.hpp"
 
@@ -38,5 +41,14 @@ int main()
 	setup.precede(parallel_1, parallel_2, parallel_3);
 	teardown.succeed(parallel_1, parallel_2, parallel_3);
 	executor.run(taskflow).wait();
+
+	taskflow.name("Multiple Tasks");
+	setup.name("Setup");
+	parallel_1.name("Parallel 1");
+	parallel_2.name("Parallel 2");
+	parallel_3.name("Parallel 3");
+	teardown.name("Teardown");
+	dumpToFile(taskflow, "creating_multiple_tasks.dot");
+
 	return 0;
 }

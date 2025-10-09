@@ -1,3 +1,6 @@
+// Project includes.
+#include "utils.h"
+
 // Taskflow includes.
 #include "taskflow/taskflow.hpp"
 
@@ -22,5 +25,11 @@ int main()
 	tf::Task second_task = taskflow.emplace(::second_task);
 	first_task.precede(second_task);
 	executor.run(taskflow).wait();
+
+	taskflow.name("Creating Dependencies");
+	first_task.name("First Task");
+	second_task.name("Second Task");
+	dumpToFile(taskflow, "creating_dependencies.dot");
+
 	return 0;
 }

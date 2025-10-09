@@ -1,3 +1,6 @@
+// Project includes.
+#include "utils.h"
+
 // Taskflow includes.
 #include "taskflow/taskflow.hpp"
 
@@ -36,5 +39,11 @@ int main()
 	tf::Task dynamic = taskflow.emplace(create_dynamic_tasks);
 	input.precede(dynamic);
 	executor.run(taskflow).wait();
+
+	taskflow.name("Dynamic Tasks");
+	input.name("Input");
+	dynamic.name("Dynamic");
+	dumpToFile(taskflow, "dynamic_task.dot");
+
 	return 0;
 }
