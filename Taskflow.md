@@ -101,6 +101,8 @@ int main()
 In this case we could achieve the same thing using `second_task.succeed(first_task);` instead.
 
 
+![](./images/taskflow/creating_dependencies.jpg)
+
 # Creating Multiple Tasks
 
 We can pass multiple callables to `tf::Taskflow::emplace`.
@@ -137,7 +139,7 @@ int main()
 }
 ```
 
-
+![](./images/taskflow/creating_multiple_tasks.jpg)
 # Creating Dynamic Tasks
 
 So far we have been creating static tasks, meaning that we know exactly what is going to be executed when `tf::Executor::run` is called.
@@ -200,11 +202,15 @@ int main()
 Tasks that succeeds a parent task also succeeds the dynamic tasks spawned by that parent task.
 
 
+![](./images/taskflow/dynamic_task.jpg)
+
+Unfortunately, we cannot see the child tasks of the dynamic task since they don't have a permanent representation in the `tf::Taskflow`.
+
 
 # Conditions And Loops
 
 Tasks need not be performed in a pure top-to-bottom order.
-Through conditions we can dynamically decide to only rum some branches of the graph, or run some parts multiple times.
+Through conditions we can dynamically decide to only run some branches of the graph, or run some parts multiple times.
 That is, a Taskflow is not a DAG.
 There a are some caveats though that we will get to.
 
@@ -213,15 +219,16 @@ Let's start with the basics.
 
 ## If-Else
 
-A conditional task is one that chooses and schedules only one if its successors, all other successors are ignored.
+A condition task is one that chooses and schedules only one if its successors, all other successors are ignored.
 Remember that the successors are the tasks that the conditional task precedes.
 The selection is made based on the return value if the conditional task, which is an index  into the list of successors.
-In the following dependencies setup example we create a situation where if the conditional task returns 0 then the first task is scheduled, if the return value is 1 then the second task is scheduled, and so on for all successors.
+In the following dependencies setup example we create a situation where if the condition task returns 0 then the first task is scheduled, if the return value is 1 then the second task is scheduled, and if the return value is 3 then the third task is scheduled.
 ```cpp
 conditional_task.precede(first_task, second_task, third_task);
 ```
 
 Let's look at a concrete example, one that reads an integer from standard input and prints a message indicating whether the number is even or odd.
+
 ```cpp
 // Taskflow includes.
 #include <taskflow/taskflow.hpp>
@@ -239,6 +246,7 @@ void read_data()
 
 int even_or_odd()
 {
+	// 0 for even, 1 for odd.
 	return number % 2;
 }
 
@@ -263,6 +271,7 @@ int main()
 	tf::Task print_odd = taskflow.emplace(::print_odd);
 
 	read_data.precede(even_or_odd);
+	// 0 schedules print_even, 1 schedules print_odd.
 	even_or_odd.precede(print_even, print_odd);
 
 	executor.run(taskflow).wait();
@@ -282,10 +291,33 @@ The task graph is visualized as follows:
 Notice how the the Even Or Odd node is a diamond instead of an ellipse, this indicates that it is a condition task.
 Notice how the dependency lines out of the condition task are dashed instead of solid, this indicates that these dependencies are _weak_ dependencies.
 Weak dependencies differ from the regular strong dependencies in that they sidestep the regular dependency management and schedule the dependee task immediately regardless of what other dependencies the dependee may have, and a task that has weak dependencies to it may be scheduled as soon as all strong dependencies have been resolved regardless of the state of the weak dependencies.
-This set of rules makes it possible to encode loops in the dependency system.
+
+The following diagram exemplifies the interplay between strong and weak dependencies.
 
 ![](./images/taskflow/weak_and_strong_dependencies.jpg)
+
+When  this Taskflow is passed to an Executor the Executor will start  by scheduling the roots of the graph, i.e. the nodes that have no dependencies at all, which are Start 1 and Start 2.
+Start 1 and Start 2 each have a single strong dependency to a separate successor task, End 1 for Start 1 and Condition for Start 2.
+Since End 1 has no other strong dependencies the conclusion of Start 1 will schedule End 1.
+Condition also has no other strong dependencies so it is also started.
+Condition has two outgoing weak dependencies and which is scheduled depend on the return value of the callback, which for this discussion we assume to be 0.
+When Condition concludes it follows the weak outgoing dependency labeled 0 and finds End 1.
+Since this is a weak dependency no other dependencies into End 1 is considered and the task is scheduled.
+So End 1 is scheduled, and run, twice.
+There is  no coordination between the two executions of End 1.
+If it takes a non-trivial amount of time to execute End 1 then multiple executions of the End 1 callback may be running in parallel on separate worker threads.
+
+Whether or not End 1 runs twice or not has been inconsistent in my testing.
+If Start 1 is the first to resolve End 1 then Condition resolves it again some time later then End 1 will be started a second time.
+On the other hand, if Condition is the first to resolve End 1 then the completion of Start 1 will not schedule a second execution of End 1.
+This sounds like fertile ground for Heisenbugs to me, please don't create task graphs that have multiple ways to schedule the same  task depending on timing differences between runs.
+
 ## Loop
+
+This weak versus strong rules makes it possible to encode loops in the dependency system.
+We might think that
+
+![](./images/taskflow/failed_loop.jpg)
 
 
 ![](./images/taskflow/counter.jpg)
