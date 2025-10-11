@@ -11,7 +11,7 @@ void start_orders() { std::cout << "Start Orders\n"; }
 void check_main_warehouse() { std::cout << "Check Main Warehouse\n"; }
 void prepare_main_warehouse_order() { std::cout << "Prepare Main Warehouse Order\n"; }
 void unlock_backup_warehouse() { std::cout << "Unlock Backup Warehouse\n"; }
-int condition() { std::cout << "Check Backup Warehouse\n"; return 0; }
+int condition() { std::cout << "Check Backup Warehouse\n"; return 1; }
 void prepare_backup_warehouse_order() { std::cout << "Prepare Backup Warehouse Order\n"; }
 void lock_backup_warehouse() { std::cout << "Lock Backup Warehosue\n"; }
 void submit_orders() { std::cout << "Submit Orders\n"; }
