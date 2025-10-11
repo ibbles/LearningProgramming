@@ -343,7 +343,12 @@ It is OK to have multiple strong dependencies to the task that form the start of
 
 
 
+# Profiling
 
+There is a built-in profiler that records start and stop times of a task graph's execution.
+Run with the `TF_ENABLE_PROFILER` environment variable set to the path of a JSON file to write profiling data to.
+Paste the contents of the generated JSON file into the text box at https://taskflow.github.io/tfprof/.
+You can also self-host the profiler front-end, see https://github.com/taskflow/tfprof
 # Observations
 
 - Main thread not used as a worker.
@@ -355,3 +360,5 @@ It is OK to have multiple strong dependencies to the task that form the start of
 
 - 1: [_Taskflow: A Lightweight Parallel and Heterogeneous Task Graph Computing System_ by Tsun-Wei Huang et.al. 2022 @ taskflow.github.io](https://taskflow.github.io/papers/tpds21-taskflow.pdf)
 - 2: [_Taskflow QuickStart_ by Dr. Tsung-Wei Huang 2025 @ taskflow.github.io](https://taskflow.github.io/taskflow/index.html)
+- 3: [_TFProf_ by Dr. Tsun-Wei Huang @ github.com/taskflow](https://github.com/taskflow/tfprof)
+- 4: [_Taskflow Profiler_ @ taskflow.github.io](https://taskflow.github.io/tfprof/)
