@@ -10,12 +10,12 @@ These concepts are codified in three types:
 - `tf::Executor`: A runtime for executing task graphs.
 
 Taskflow provides a number of different task types with different features and characteristics.
-- Static task: Basically just a callback.
+- Static task: A callback.
 - Dynamic task: A task that creates nested / inner child-tasks at runtime.
 - Condition task: Runtime selection of which task should be executed next, possibly a prior task.
 - Composite task: The inclusion of one `tf::Taskflow` into another.
 
-The type a task has depends on the signature on the callback function associated with the task.
+The type a task has depends on the signature of the callback function associated with the task.
 A `void()` function creates a static task.
 A `void(tf::Subflow&)` function creates a dynamic task.
 An `int()` function creates a condition task.
@@ -55,17 +55,17 @@ We can see the central parts of a Taskflow program:
 The task graph produced by this code consists, as expected, of a single task:
 ![](./images/taskflow/a_simple_example.jpg)
 
-To generate the the figure the example code was extended with some additional statements to assign names to the Taskflow and the Task and to generate the figure.
+To generate the diagram the example code was extended with some additional statements to assign names to the Taskflow and the Task and to generate the diagram.
 
 
-# Creating Tasks
+# Creating Static Tasks
 
-A task is any callable, such as a regular function, a lambda expression, or an instance of a type with a call operator, that does not take any arguments.
-To create an actual `tf::Task` instance we call the `emplace` member function of the `tf::Taskflow` instance that should  own the task.
+A static task can be created from any callable, such as a free function, a lambda expression, or an instance of a type with a call operator, that does not take any arguments and doesn't return anything.
+To create a `tf::Task` instance we call the `emplace` member function of the `tf::Taskflow` instance that should  own the task.
 This creates a `tf::Task` instance stored inside the `tf::Taskflow`.
-The return value of `tf::Taskflow::emplace` is one or more `tf::Task` instances, one for each callable passed.
+The return value of `tf::Taskflow::emplace` is one or more `tf::Task` instances, one for each callable passed to `emplace`.
 The `tf::Task` instances can be used to configure the created tasks, for example to add dependencies to other tasks or assign names to the tasks.
-When a `tf::Taskflow` is run by an executor then the tasks within that `tf::Taskflow` are executed, meaning that the callables held by the tasks are invoked by the runtime.
+When a `tf::Taskflow` is run by an executor then the tasks within that `tf::Taskflow` are executed according to their dependencies, meaning that the callables held by the tasks are invoked by the runtime.
 
 
 # Creating Task Dependencies
@@ -147,7 +147,7 @@ Dynamic tasks lets us defer the task creation until runtime, when parts of the t
 That is, an early task can communicate to a later task and influence the dynamic tasks that are created.
 
 We prepare for dynamic task creation by creating a task from a callable that takes a `tf::Subflow&` as its only parameter.
-`tf::Subflow` is similar to `tf::Taskflow` but instead of passing it to a `tf::Executor` for execution it is executed immediately following the task it is associated with.
+`tf::Subflow` is similar to `tf::Taskflow` but instead of passing it to a `tf::Executor` for execution it is executed immediately following the callback of the task it is associated with.
 The dynamic tasks are created much like regular tasks, by passing a callable to the `emplace` member function of `tf::Subflow`.
 We say that the task with the `tf::Subflow&` parameter is the parent task and the dynamic tasks, the child tasks, are spawned from the parent task.
 The dynamic tasks can have dependencies just like regular static tasks.
@@ -163,7 +163,7 @@ Since the input task precedes the dynamic task we are guaranteed that any side e
 // Standard library includes.
 #include <iostream>
 
-// Written in 'input_task', read in 'dynamic_task'.
+// Written in 'input_work', read in 'dynamic_work'.
 int global_state {0};
 
 void input_work()
@@ -174,10 +174,7 @@ void input_work()
 
 // This task is not scheduled in main, instead it is
 // scheduled by create_dynamic_tasks.
-void dynamic_work()
-{
-	std::cout << "Dynamic work.\n";
-}
+void dynamic_work() { std::cout << "Dynamic work.\n"; }
 
 void create_dynamic_tasks(tf::Subflow& subflow)
 {
@@ -199,18 +196,17 @@ int main()
 }
 ```
 
-Tasks that succeeds a parent task also succeeds the dynamic tasks spawned by that parent task.
-
-
 ![](./images/taskflow/dynamic_task.jpg)
 
-Unfortunately, we cannot see the child tasks of the dynamic task since they don't have a permanent representation in the `tf::Taskflow`.
+Unfortunately, we cannot see the child tasks of the dynamic task in the diagram since they don't have a permanent representation in the `tf::Taskflow`.
+
+Tasks that succeeds a parent task also succeeds the dynamic tasks spawned by that parent task.
 
 
 # Conditions And Loops
 
 Tasks need not be performed in a pure top-to-bottom order.
-Through conditions we can dynamically decide to only run some branches of the graph, or run some parts multiple times.
+Through condition tasks we can dynamically decide to only run some branches of the graph, or run some parts multiple times.
 That is, a Taskflow is not a DAG.
 There a are some caveats though that we will get to.
 
@@ -244,21 +240,9 @@ void read_data()
 	std::cin >> number;
 }
 
-int even_or_odd()
-{
-	// 0 for even, 1 for odd.
-	return number % 2;
-}
-
-void print_even()
-{
-	std::cout << "Number " << number << " is even.\n";
-}
-
-void print_odd()
-{
-	std::cout << "Number " << number << " is odd.\n";
-}
+int even_or_odd() { return number % 2; } // Returns 0 for even, 1 for odd.
+void print_even() { std::cout << "Number " << number << " is even.\n"; }
+void print_odd() { std::cout << "Number " << number << " is odd.\n"; }
 
 int main()
 {
@@ -273,7 +257,6 @@ int main()
 	read_data.precede(even_or_odd);
 	// 0 schedules print_even, 1 schedules print_odd.
 	even_or_odd.precede(print_even, print_odd);
-
 	executor.run(taskflow).wait();
 	return 0;
 }
@@ -288,45 +271,86 @@ The task graph is visualized as follows:
 
 ![](./images/taskflow/branch.jpg)
 
-Notice how the the Even Or Odd node is a diamond instead of an ellipse, this indicates that it is a condition task.
+Notice how the the Even Or Odd node is shown as a diamond instead of an ellipse, this indicates that it is a condition task.
 Notice how the dependency lines out of the condition task are dashed instead of solid, this indicates that these dependencies are _weak_ dependencies.
-Weak dependencies differ from the regular strong dependencies in that they sidestep the regular dependency management and schedule the dependee task immediately regardless of what other dependencies the dependee may have, and a task that has weak dependencies to it may be scheduled as soon as all strong dependencies have been resolved regardless of the state of the weak dependencies.
+Weak dependencies differ from the regular strong dependencies in that they sidestep the regular dependency management and schedule the dependee task immediately regardless of what other dependencies the dependee task may have, and a task that has weak dependencies to it may be scheduled as soon as all strong dependencies have been resolved regardless of the state of the weak dependencies.
 
-The following diagram exemplifies the interplay between strong and weak dependencies.
+The following diagram exemplifies the interplay between strong and weak dependencies using an example of a bad task graph setup.
 
 ![](./images/taskflow/weak_and_strong_dependencies.jpg)
 
 When  this Taskflow is passed to an Executor the Executor will start  by scheduling the roots of the graph, i.e. the nodes that have no dependencies at all, which are Start 1 and Start 2.
-Start 1 and Start 2 each have a single strong dependency to a separate successor task, End 1 for Start 1 and Condition for Start 2.
+Start 1 and Start 2 each have a single strong dependency to their own separate successor tasks, End 1 for Start 1 and Condition for Start 2.
 Since End 1 has no other strong dependencies the conclusion of Start 1 will schedule End 1.
-Condition also has no other strong dependencies so it is also started.
+Since Condition has no strong dependencies other than Start 2 it is started as soon as Start 2 concludes.
 Condition has two outgoing weak dependencies and which is scheduled depend on the return value of the callback, which for this discussion we assume to be 0.
 When Condition concludes it follows the weak outgoing dependency labeled 0 and finds End 1.
 Since this is a weak dependency no other dependencies into End 1 is considered and the task is scheduled.
-So End 1 is scheduled, and run, twice.
-There is  no coordination between the two executions of End 1.
+So End 1 is scheduled, and run, twice _in this particular interleaving_.
 If it takes a non-trivial amount of time to execute End 1 then multiple executions of the End 1 callback may be running in parallel on separate worker threads.
+There is  no coordination between the two executions of End 1, Start 1 and Condition could conclude in any order.
 
-Whether or not End 1 runs twice or not has been inconsistent in my testing.
-If Start 1 is the first to resolve End 1 then Condition resolves it again some time later then End 1 will be started a second time.
+Whether End 1 is run twice or not has been inconsistent in my testing.
+If Start 1 is the first to resolve End 1 and Condition resolves it again some time later then End 1 will be started a second time.
 On the other hand, if Condition is the first to resolve End 1 then the completion of Start 1 will not schedule a second execution of End 1.
-This sounds like fertile ground for Heisenbugs to me, please don't create task graphs that have multiple ways to schedule the same  task depending on timing differences between runs.
+I'm not sure why.
+This sounds like fertile ground for Heisenbugs to me, please don't create task graphs that have multiple ways to schedule the same task depending on timing differences between runs.
+
+I'm not sure what the solution is here.
+How can I have two parallel execution paths that optionally merge?
+Let's consider a slightly more realistic scenario where the goal is to submit orders  for warehouses that need replenishing.
+The primary warehouse always need to order something, but the backup warehouse might not.
+The backup warehouse is usually locked and needs to be unlocked before it can be checked.
+If nothing is ordered for the backup warehouse then it should be locked again, if something is ordered then it should be left unlocked so the goods can be stockpiled once they arrive.
+
+The following is an attempt at modeling the task graph:
+![](./images/taskflow/restock_warehouses.jpg)
+
+This fails to submit the order if the backup warehouse did not need restocking, Check Backup Warehouse returns 0, since Prepare Backup Warehouse Order, a strong dependency of Submit Order, is never run.
+A few possible solutions:
+- Always run Prepare Backup Warehouse Order and let it do nothing if nothing needs to be ordered.
+	- Check Backup Warehouse should be a static task,  rather than a condition task, for this.
+	- Prepare Backup Warehouse can be a condition task that either goes to Lock Backup Warehouse or to a dummy task in case the warehouse should not be locked.
+- Turn Prepare Backup Warehouse Order into a dynamic task that create a single Prepare Backup Warehouse Order Impl task if an order actually needs to be filled and creates nothing if nothing needs to be ordered.
+
+Let's consider an even more complicated case where we can know ahead of time if we for sure do not need to order anything from the  backup warehouse.
+
+![](./images/taskflow/restock_warehouses_is_full.jpg)
+
+How would I restructure this so that Submit Orders can run as soon as it is known that no more orders will be prepared?
+
 
 ## Loop
 
-This weak versus strong rules makes it possible to encode loops in the dependency system.
-We might think that
+This separation between weak and strong rules makes it possible to encode loops in the dependency graph.
+We create a dependency out of a condition task that goes back up to an earlier task that will eventually connect back down to the condition task.
+The loop will continue executing until the condition task decides to take another path and break the loop.
+However, there are some things we must keep in mind when setting up the graph.
+For example, we might think that the following will run Increment Counter until the callback associated with Is Goal Reached decides to return 1 instead of 0.
 
 ![](./images/taskflow/failed_loop.jpg)
 
+This doesn't work because even though Increment Counter doesn't have any strong dependencies, it does have a weak dependency which means that it is not a _root node_ in the task graph and won't be part of the initial set of tasks executed when `tf::Executor::run` is called.
+In fact, there are no root tasks in this graph at all so no task will start executing and the application will deadlock.
+
+To fix this problem we can add a dummy Start task without dependencies to act as our root task.
+The strong dependency from Start to Increment Counter will be enough to schedule Increment Counter when Start concludes.
 
 ![](./images/taskflow/counter.jpg)
+
+It is OK to have multiple strong dependencies to the task that form the start of the loop:
+![](./images/taskflow/multi_predecessor_loop_start.jpg)
+
+
+
 
 # Observations
 
 - Main thread not used as a worker.
 	- Can we turn it into a worker?
 - Seems difficult to debug.
+- Is it possible to do  optional diamond dependencies?
+	- That is, can I have a setup job, two parallel branches of independent jobs, and a teardown job where the teardown job has a dependency on a job in one of the branches that might not be executed due to condition tasks?
 # References
 
 - 1: [_Taskflow: A Lightweight Parallel and Heterogeneous Task Graph Computing System_ by Tsun-Wei Huang et.al. 2022 @ taskflow.github.io](https://taskflow.github.io/papers/tpds21-taskflow.pdf)
