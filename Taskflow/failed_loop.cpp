@@ -37,8 +37,10 @@ int main()
 	increment_counter.precede(is_goal_reached);
 	is_goal_reached.precede(increment_counter, print_counter);
 
+	// Cannot run this taskflow because it doesn't have any root tasks.
+	// increment_counter is not a root task because even weak dependencies
+	// count when determining if a task is a root task.
 	//executor.run(taskflow).wait();
-
 
 	taskflow.name("Failed Loop");
 	increment_counter.name("Increment Counter");
