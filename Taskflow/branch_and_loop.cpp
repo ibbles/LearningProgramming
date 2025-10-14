@@ -130,10 +130,10 @@ int main()
 	read_b.name("Read b");
 
 	tf::Task compute_residual = taskflow.emplace(::compute_residual);
-	compute_residual.name("Compute residual");
+	compute_residual.name("Compute Residual");
 
 	tf::Task record_trajectory = taskflow.emplace(::record_trajectory);
-	record_trajectory.name("Record trajectory");
+	record_trajectory.name("Record Trajectory");
 
 	tf::Task should_loop = taskflow.emplace(
 		[]()
