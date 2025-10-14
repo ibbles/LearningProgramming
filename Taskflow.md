@@ -342,6 +342,73 @@ It is OK to have multiple strong dependencies to the task that form the start of
 ![](./images/taskflow/multi_predecessor_loop_start.jpg)
 
 
+## Gauss-Seidel Solver
+
+We can write a Gauss-Seidel solver.
+The task callback functions has been shortened or left out completely for brevity.
+```cpp
+int main()
+{
+	tf::Executor executor;
+	tf::Taskflow taskflow;
+	tf::Task init_A = taskflow.emplace(::init_A);
+	tf::Task init_x = taskflow.emplace(::init_x);
+	tf::Task read_b = taskflow.emplace(::read_b);
+	tf::Task compute_residual = taskflow.emplace(::compute_residual);
+	tf::Task record_trajectory = taskflow.emplace(::record_trajectory);
+	tf::Task should_loop = taskflow.emplace([]()
+		{
+			return get_residual_norm() < 1e-6;
+		});
+	tf::Task update_x = taskflow.emplace(::update_x);
+	tf::Task print_result = taskflow.emplace(::print_result);
+
+	compute_residual.succeed(init_A, init_x, read_b);
+	compute_residual.precede(record_trajectory);
+	record_trajectory.precede(should_loop);
+	should_loop.precede(update_x, print_result);
+	update_x.precede(compute_residual);
+
+	executor.run(taskflow).wait();
+}
+```
+
+![](./images/taskflow/branch_and_loop.jpg)
+
+Notice that the Update X task is a condition task even though at first glance it shouldn't need to  be.
+We are modeling the following procedural code:
+```cpp
+a = init_a();
+x = init_x();
+b = read_b();
+loop:
+r = compute_residual();
+record_trajectory();
+if (r < 1e-6)
+{
+	update_x();
+	goto loop;
+} 
+print_result();
+```
+
+After `update_x` we want to start a new iteration.
+There is no decision making going on here, it is an unconditional jump back up.
+The Update X task only has a single value it can return: 0.
+It will _always_ go back up to Compute Residual.
+However, if we create Update X as a static task then Compute Residual will have a strong dependency on it, which means that Compute Residual won't run until Update X has run.
+But Update X can't run until Should Loop has scheduled it, which cannot happen until after Compute Residual.
+So we have an over-dependent system that cannot complete.
+We break this over-dependency my making the upwards dependency form Update X to  Computer Residual a weak dependency and the only way I know of doing that is to make Update X a condition task.
+Perhaps there are other ways.
+
+
+# Composite Task Graphs
+
+It is possible to put one task graph inside another, so that when the internal graph is reached it is executed in its entirety before execution continues.
+The dependency setup work just like with regular tasks.
+
+
 
 # Profiling
 
