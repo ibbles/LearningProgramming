@@ -1,5 +1,6 @@
 Taskflow is a task graph computing system.
 This means that instead of chaining functions together as the program is executed the structure of the program is defined up-front in a task graph that is executed by a runtime.
+The motivation is to make it easier to write parallel programs.
 The following is an example graph from the Taskflow paper [(1)](https://taskflow.github.io/papers/tpds21-taskflow.pdf), we will dive into  what the different symbols mean throughout this note.
 ![](./images/taskflow/example_task_graph.jpg)
 
@@ -408,6 +409,40 @@ Perhaps there are other ways.
 It is possible to put one task graph inside another, so that when the internal graph is reached it is executed in its entirety before execution continues.
 The dependency setup work just like with regular tasks.
 
+```cpp
+// Project includes.
+#include "utils.h"
+
+// Taskflow includes.
+#include <taskflow/taskflow.hpp>
+
+// Standard library includes.
+#include <iostream>
+
+
+int main()
+{
+	tf::Taskflow f1, f2;
+
+	// create taskflow f1 of two tasks
+	tf::Task f1A = f1.emplace([]() { std::cout << "Task f1A\n"; }).name("f1A");
+	tf::Task f1B = f1.emplace([]() { std::cout << "Task f1B\n"; }).name("f1B");
+
+	// create taskflow f2 with one module task composed of f1
+	tf::Task f2A = f2.emplace([]() { std::cout << "Task f2A\n"; }).name("f2A");
+	tf::Task f2B = f2.emplace([]() { std::cout << "Task f2B\n"; }).name("f2B");
+	tf::Task f2C = f2.emplace([]() { std::cout << "Task f2C\n"; }).name("f2C");
+	tf::Task f1_module_task = f2.composed_of(f1).name("module");
+
+	f1_module_task.succeed(f2A, f2B).precede(f2C);
+
+	dumpToFile(f2, "composite_task.dot");
+}
+```
+
+![](./images/taskflow/composite_task.jpg)
+
+Unfortunately the name of the inner Taskflow is not displayed in the diagram.
 
 
 # Profiling
@@ -416,6 +451,8 @@ There is a built-in profiler that records start and stop times of a task graph's
 Run with the `TF_ENABLE_PROFILER` environment variable set to the path of a JSON file to write profiling data to.
 Paste the contents of the generated JSON file into the text box at https://taskflow.github.io/tfprof/.
 You can also self-host the profiler front-end, see https://github.com/taskflow/tfprof
+
+
 # Observations
 
 - Main thread not used as a worker.
@@ -429,3 +466,5 @@ You can also self-host the profiler front-end, see https://github.com/taskflow/t
 - 2: [_Taskflow QuickStart_ by Dr. Tsung-Wei Huang 2025 @ taskflow.github.io](https://taskflow.github.io/taskflow/index.html)
 - 3: [_TFProf_ by Dr. Tsun-Wei Huang @ github.com/taskflow](https://github.com/taskflow/tfprof)
 - 4: [_Taskflow Profiler_ @ taskflow.github.io](https://taskflow.github.io/tfprof/)
+- 5: [_Taskflow Handbook_ by Dr. Tsun-Wei Huang @ taskflow.github.io](https://taskflow.github.io/taskflow/pages.html)
+
