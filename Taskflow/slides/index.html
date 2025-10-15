@@ -3,8 +3,11 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<meta name="description" conent="An introduction to Taskflow, the C++ task graph library.">
+		<meta name="author" content="Martin Nilsson">
 
-		<title>reveal.js</title>
+		<title>Taskflow</title>
+
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
@@ -16,8 +19,105 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+
+
+				<!-- PART I -->
+				<!-- INTRODUCTION -->
+				<section>
+					<h1 class="r-fit-text">Taskflow - A Task Graph Library</h1>
+					<p>How to make a computer compute</p>
+					<aside class="notes">
+						I'm gonna be talking about computing, because I like computing.<br><br>
+						This is a presentation about Taskflow, the task graph library, and why we need such a thing.
+					</aside>
+				</section>
+
+				<section>
+					<h3>The walls</h3>
+					<img src="images/cpu-trend.jpg">
+					<small><a href="https://www.karlrupp.net/2018/02/42-years-of-microprocessor-trend-data/">https://www.karlrupp.net/2018/02/42-years-of-microprocessor-trend-data/</a></small>
+
+					<aside class="notes">
+						For a while computer users enjoyed a steady pace of speed increases.<br><br>
+						This kept going until the early 2000's when we hit the walls.<br><br>
+						The power and frequency wall in particular.<br><br>
+						These are joined by the so called Dennard scaling that says that as the transistors get smaller they use less energy so that the energy density, heat per area, remains roughly constant even though the number of transistors increases.<br><br>
+						This stopped being the case somwhere around here, and since peak frequency is highly dependent on the voltage we can push through the transistors and heat is highly depenent on the voltage we hit a point where increasing the frequency and adding more and more tiny transistors lead to unmangeable heat generation.<br><br>
+						The famous Moore's law still doing alright but single-threaded performance has not keeping up with the number of transistors and have started to level off.<br><br>
+						Frequency not increasing much anymore and CPU / compiler makers are having trouble extracting more instruction level parallelism from straightline code.<br><br>
+						To combat this we got more cores.<br><br>
+						This means that those of us who remember the times where a new computer would make all programs run faster had to get acustomed to that not being the case anymore and we had to start working to make use all those new transistors hiding behind the second, and third, and ninetysixth core.<br><br>
+						The free lunch as over, as the saying goes.
+					</aside>
+				</section>
+
+
+				<section>
+					<h3>Ways of writing multi-threaded programs</h3>
+					<ul>
+						<li><p class="fragment semi-fade-out" data-fragment-index="1">Manual threads</p></li>
+						<li><p class="fragment semi-fade-out" data-fragment-index="1">Data parallel</p></li>
+						<li><p class="fragment semi-fade-out" data-fragment-index="1">Producer / consumer</p></li>
+						<li><p class="fragment semi-fade-out" data-fragment-index="1">Pipeline</p></li>
+						<li><p>Task graph</p></li>
+						<li><p class="fragment semi-fade-out" data-fragment-index="1">Actors / events</p></li>
+						<li><p class="fragment semi-fade-out" data-fragment-index="1">Fork-join</p></li>
+					</ul>
+					<aside class="notes">
+						Multiple cores means that we can no longer rely on single-threaded programs, we need to go parallel or concurrent.
+						<br><br>
+						These mean different things, but for this discussion I'm going to ignore that.
+						<br><br>
+						Think multi-threaded and we sort of cover what we need.
+						<br><br>
+						Here are some ways of organizing a multi-threaded program.
+						<br><br>
+						These are not clear-cut implementation strategies but broad categories.
+						<br><br>
+						Manual threads means starting a new thread for each task that needs to be done. Think one for audio, one for physics, one for AI, one for graphics, one for IO, and so on in a video game.
+						<br><br>
+						Data parallel means that we have a serial main thread and whenever we have a large set of elements we need to perform the same operation on then we bring in all the other cores to chrunch the numbers. This is how OpenMP and GPUs work. The classical parallel-for concept.
+						<br><br>
+						Producer / consumer can be used when we have one part of the program that through some process produces data and another part that reads that data and computes an output. If these are indenpendent then they can be run in parallel on different threads.
+						<br><br>
+						A pipeline can be though of a chain of producer / consumer pairs where each thread is both a consumer of its input and a producer of the output that becomes the input for the next thread.
+						<br><br>
+						A task graph is kinda like a branching pipeline where the output produced by one task may be consumed by multiple later tasks. In a task graph we rarely have one thread per task but a pool of worker threads that can be assigned any task that becomes ready to run. A task is typically short-lived while a pipeline is a steady-state construction where data flows through continuously.
+						<br><br>
+						The actor model models a system of indenpendent concurrently executing entities that listen for events and responds to them with some processing and possibly the generation of new events.
+						<br><br>
+						Fork-join is a broad categorization that means that that is a main flow of logic that occasionally branches out to parallel computation and that the result from those parallel computations are collected back before the main flow continues. The data parallel model is an example of fork-join.
+						<br><br>
+						It is possible to combine these, which is what AGX Dynamcis does.
+						<br><br>
+						Today the focus will be on task graphs, which forms the basis for parallelization in AGX Dynamics and what the Taskflow library provides.
+						<br><br>
+						Taskflow also does GPU stuff but I'm not going to go into that part today.<br><br>
+					</aside>
+				</section>
+
+				<section>
+					<h3>Task Graph Computing System </h3>
+					<p>Instead of chaining function calls together as the program is executed the structure of the computation is defined up-front in a task graph.</p>
+				</section>
+
+				<section>
+					<h3>Task Based Parallelism</h3>
+					<p>Construct a dependency graph with tasks as nodes.</p>
+					<p>Dependencies between tasks represented as edges.</p>
+					<p>Execute tasks top-to-bottom.</p>
+					<p>Exploit task independence for parallelism.</p>
+				</section>
+				<section>
+					<h3>Example Task Graph</h3>
+					<img src="./images/example_task_graph.svg">
+					<p>Once Task 1 has completed we can run Task 2 and 4 in parallel.</p>
+				</section>
+
+				<section>
+					<h3>Task Based Parallelism </h3>
+				</section>
+
 			</div>
 		</div>
 
