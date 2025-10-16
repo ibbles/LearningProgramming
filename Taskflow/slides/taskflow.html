@@ -25,7 +25,9 @@
 				<!-- INTRODUCTION -->
 				<section>
 					<h1 class="r-fit-text">Taskflow - A Task Graph Library</h1>
-					<p>How to make a computer compute</p>
+					<p>Subtitle?</p>
+					<p>A short introduction</p>
+					<p>Parallel programs made easy</p>
 					<aside class="notes">
 						I'm gonna be talking about computing, because I like computing.<br><br>
 						This is a presentation about Taskflow, the task graph library, and why we need such a thing.
@@ -99,6 +101,10 @@
 				<section>
 					<h3>Task Graph Computing System </h3>
 					<p>Instead of chaining function calls together as the program is executed the structure of the computation is defined up-front in a task graph.</p>
+
+					<aside class="notes">
+						The "up-front" part is not as rigid as it may sound may expressed like this.
+					</aside>
 				</section>
 
 				<section>
@@ -108,6 +114,7 @@
 					<p>Execute tasks top-to-bottom.</p>
 					<p>Exploit task independence for parallelism.</p>
 				</section>
+
 				<section>
 					<h3>Example Task Graph</h3>
 					<img src="./images/example_task_graph.svg">
@@ -115,9 +122,203 @@
 				</section>
 
 				<section>
-					<h3>Task Based Parallelism </h3>
+					<h3>Static Tasking </h3>
+					<p>The simplest form of task graph.</p>
+					<p>All tasks are known up front.</p>
+					<p>The example on the previous slide is a static task graph.</p>
+
+					<aside class="notes">
+						There are different types of task graphs with different types of expressive power.
+						<br><br>
+						Static tasking is the simplest form. When I said "up-front" earlier this is what I was talking about.
+					</aside>
 				</section>
 
+				<section data-auto-animate>
+					<h3 data-id="title">Fundamental Building Blocks</h3>
+					<p data-id="task">A task</p>
+					<p data-id="graph">A task graph</p>
+					<p data-id="runtime"> A runtime</p>
+
+					<aside class="notes">
+						Let's get technical.
+						<br><br>
+						To realize all of this in an actual application we need three things.
+						<br><br>
+						Something to represent the tasks to execute. This includes both the work to be performed and metadata such as name, user data and type.
+						<br><br>
+						Something to represent the dependencies between tasks, the dependency graph.
+						<br><br>
+						A runtime that can run all tasks in the correct order.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h3 data-id="title">Taskflow Library</h3>
+					<p data-id="task">A task</p><code>tf::Task</code>
+					<br><br>
+					<p data-id="graph">A task graph</p> <code>tf::Taskflow</code>
+					<br><br>
+					<p data-id="runtime">A runtime </p> <code>tf::Executor</code>
+
+					<aside class="notes">
+						Taskflow is a C++ library and uses classes to represent these things.
+						<br><br>
+						All placed within the tf namespace, short for Taskflow.
+						<br><br>
+						Let's create and run the simplest possible task graph.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
+					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="1-4">
+						void work()
+						{
+							std::cout << "Doing work.\n";
+						}
+					</code></pre>
+					<aside class="notes">
+						To create a task we need to start with some work to do.
+						<br><br>
+						Here that work is to print the string "Doing work.".
+						<br><br>
+						You can imagine any other type of work one might need to do.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
+					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="6-8">
+						void work()
+						{
+							std::cout << "Doing work.\n";
+						}
+
+						int main()
+						{
+						}
+					</code></pre>
+					<aside class="notes">
+						With some work ready to be performed we need to do some setup to arrange for the work to be performed.
+						<br><br>
+						In this example we do this in main.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
+					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="8">
+						void work()
+						{
+							std::cout << "Doing work.\n";
+						}
+
+						int main()
+						{
+							tf::Taskflow taskflow;
+						}
+					</code></pre>
+					<aside class="notes">
+						We create an instance of the Taskflow class to get a task graph in which we can create our task that will call the work function.
+					</aside>
+				</section>
+
+
+				<section data-auto-animate>
+					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
+					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="9">
+						void work()
+						{
+							std::cout << "Doing work.\n";
+						}
+
+						int main()
+						{
+							tf::Taskflow taskflow;
+							tf::Task task = taskflow.emplace(work);
+						}
+					</code></pre>
+					<aside class="notes">
+						To create a task we don't directly create an instance of the task class and add to the taskflow.
+						<br><br>
+						Instead we let the taskflow create the task for us by calling emplace.
+						<br><br>
+						The parameter to emplace is the code we want to have executed when the task is run. This can be anything that is callable with no arguments. Here we use a free function but it could just as well have been a lambda or an object with a call operator.
+						<br><br>
+						The thing we get back is not the actual task but a handle to it. A handle that is small, cheap to pass around, and safe to copy. It's a pointer, basically.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
+					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="8">
+						void work()
+						{
+							std::cout << "Doing work.\n";
+						}
+
+						int main()
+						{
+							tf::Executor executor;
+							tf::Taskflow taskflow;
+							tf::Task task = taskflow.emplace(work);
+						}
+					</code></pre>
+					<aside class="notes">
+						With the task graph in place we are ready to run it and for this we need the runtime, which in Taskflow is called an executor.
+						<br><br>
+						In my example I always put it high in main to signal that this is a heavy-weigth, long-lived, and shared resource. It is not meant to be created every time we want to run a task graph. Instead we should create one at startup and reuse it throught the application's life time.
+						<br><br>
+						This is where the worker threads are spawned.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
+					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="11">
+						void work()
+						{
+							std::cout << "Doing work.\n";
+						}
+
+						int main()
+						{
+							tf::Executor executor;
+							tf::Taskflow taskflow;
+							tf::Task task = taskflow.emplace(work);
+							executor.run(taskflow).wait();
+						}
+					</code></pre>
+					<aside class="notes">
+						Now we are ready to do some work for real.
+						<br><br>
+						Executor.run will cause the runtime to start running tasks using the worker threads. We can chose to either keep doing other things in the main thread or wait for the tasks to finish executing. Since we have nothing else to do in this example we wait.
+						<br><br>
+						I have not yet found a way to make the main thread participate in the task work, which is a bit limiting given that in AGX Dynamics we always run user supplied event listeners in the main thread. There is more to Taskflow that I haven't explored yet it is possible that this can be solved.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
+					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers>
+						void work()
+						{
+							std::cout << "Doing work.\n";
+						}
+
+						int main()
+						{
+							tf::Executor executor;
+							tf::Taskflow taskflow;
+							tf::Task task = taskflow.emplace(work);
+							executor.run(taskflow).wait();
+						}
+					</code></pre>
+					<aside class="notes">
+						And there you have it, the smallest possible task graph in Taskflow.
+					</aside>
+				</section>
 			</div>
 		</div>
 
