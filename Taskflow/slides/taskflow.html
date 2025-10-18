@@ -170,6 +170,9 @@
 					</aside>
 				</section>
 
+				<!-- PART II -->
+				<!-- SIMPLEST POSSIBLE TASK GRAPH -->
+
 				<section data-auto-animate>
 					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
 					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="1-4">
@@ -244,9 +247,9 @@
 						<br><br>
 						Instead we let the taskflow create the task for us by calling emplace.
 						<br><br>
-						The parameter to emplace is the code we want to have executed when the task is run. This can be anything that is callable with no arguments. Here we use a free function but it could just as well have been a lambda or an object with a call operator.
+						The parameter to emplace is the code we want to have executed when the task is run. This can be anything that is callable with no arguments. Here we use a free function but it could just as well have been a lambda funciton or an object with a call operator.
 						<br><br>
-						The thing we get back is not the actual task but a handle to it. A handle that is small, cheap to pass around, and safe to copy. It's a pointer, basically.
+						The thing we get back is not the actual task but a handle to it. A handle that is small, cheap to pass around, and safe to copy. It's a pointer, basically. The actual data lives as a node within the task graph.
 					</aside>
 				</section>
 
@@ -317,8 +320,66 @@
 					</code></pre>
 					<aside class="notes">
 						And there you have it, the smallest possible task graph in Taskflow.
+						Though we're missing some header inclues.
 					</aside>
 				</section>
+
+				<section data-auto-animate>
+					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
+					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="1">
+						#include "taskflow/taskflow.hpp"
+
+						void work()
+						{
+							std::cout << "Doing work.\n";
+						}
+
+						int main()
+						{
+							tf::Executor executor;
+							tf::Taskflow taskflow;
+							tf::Task task = taskflow.emplace(work);
+							executor.run(taskflow).wait();
+						}
+					</code></pre>
+				</section>
+
+				<section data-auto-animate>
+					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
+					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="14-17">
+						#include "taskflow/taskflow.hpp"
+
+						void work()
+						{
+							std::cout << "Doing work.\n";
+						}
+
+						int main()
+						{
+							tf::Executor executor;
+							tf::Taskflow taskflow;
+							tf::Task task = taskflow.emplace(work);
+							executor.run(taskflow).wait();
+							taskflow.name("Simplest Possible Task Graph");
+							task.name("A Lonely Task");
+							std::ofstream file("simplest_possible_task_graph.dot");
+							taskflow.dump(file);
+						}
+					</code></pre>
+					<aside class="notes">
+						Let's give the graph and task a name and dump them to a DOT file. It won't be all that useful for this minimal example but is a great help when build larger real-world graphs.
+					</aside>
+				</section>
+
+				<section>
+					<h3>SIMPLEST POSSIBLE TASK GRAPH</h3>
+					<img src="./images/simplest_possible_task_graph.svg">
+				</section>
+
+				<!-- PART III -->
+				<!-- TASK DEPENDENCIES -->
+
+
 			</div>
 		</div>
 
