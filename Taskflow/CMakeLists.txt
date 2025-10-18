@@ -39,6 +39,7 @@ endfunction()
 
 
 add_example(a_simple_example)
+add_example(simplest_possible_task_graph)
 add_example(creating_dependencies)
 add_example(creating_multiple_tasks)
 add_example(example_task_graph)
