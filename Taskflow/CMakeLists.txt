@@ -22,7 +22,8 @@ include(FetchContent)
 FetchContent_Declare(
     taskflow
     GIT_REPOSITORY https://github.com/taskflow/taskflow.git
-    GIT_TAG 0007dd38512b704b6c7e456f0b9499139bbb36ef  # Some random commit.
+    # GIT_TAG 0007dd38512b704b6c7e456f0b9499139bbb36ef  # Some random commit.
+    GIT_TAG v3.10.0
     SOURCE_DIR "${CMAKE_BINARY_DIR}/taskflow"
 )
 FetchContent_GetProperties(taskflow)
