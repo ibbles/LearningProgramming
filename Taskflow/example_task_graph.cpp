@@ -10,11 +10,9 @@ int main()
 	tf::Taskflow taskflow;
 	auto [t1, t2, t3, t4, t5, t6] = taskflow.emplace(
 		[](){}, [](){}, [](){}, [](){}, [](){}, [](){});
-	t1.precede(t2, t3, t4);
-	t2.precede(t5);
-	t3.precede(t5);
-	t4.precede(t6);
-	t5.precede(t6);
+	t1.precede(t2, t3);
+	t3.precede(t4, t5);
+	t6.succeed(t2, t4, t5);
 	executor.run(taskflow).wait();
 
 	taskflow.name("Example Task Graph");
