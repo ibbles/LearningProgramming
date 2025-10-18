@@ -326,8 +326,9 @@
 
 				<section data-auto-animate>
 					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
-					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="1">
+					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="1,2"><script type="text/template">
 						#include "taskflow/taskflow.hpp"
+						#include <iostream>
 
 						void work()
 						{
@@ -341,13 +342,18 @@
 							tf::Task task = taskflow.emplace(work);
 							executor.run(taskflow).wait();
 						}
-					</code></pre>
+					</script></code></pre>
+					<aside class="notes">
+						This can compile and run. But we also want pretty picture, like the task graph example we saw in the introduction.
+					</aside>
 				</section>
 
 				<section data-auto-animate>
 					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
-					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="14-17">
+					<pre data-id="simplest-possible-task-graph-animation"><code class="hljs c++" data-trim data-line-numbers="16-19"><script type="text/template">
 						#include "taskflow/taskflow.hpp"
+						#include <iostream>
+						#include <fstream>
 
 						void work()
 						{
@@ -365,7 +371,7 @@
 							std::ofstream file("simplest_possible_task_graph.dot");
 							taskflow.dump(file);
 						}
-					</code></pre>
+					</script></code></pre>
 					<aside class="notes">
 						Let's give the graph and task a name and dump them to a DOT file. It won't be all that useful for this minimal example but is a great help when build larger real-world graphs.
 					</aside>
@@ -374,6 +380,11 @@
 				<section>
 					<h3>SIMPLEST POSSIBLE TASK GRAPH</h3>
 					<img src="./images/simplest_possible_task_graph.svg">
+					<aside class="notes">
+						And this is what it looks like, after some edits to get a dark-mode variant.
+						<br><br>
+						But sometimes we need more than one task, so let's make a new example where we create a few of them
+					</aside>
 				</section>
 
 				<!-- PART III -->
