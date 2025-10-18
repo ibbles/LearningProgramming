@@ -154,7 +154,7 @@
 				</section>
 
 				<section data-auto-animate>
-					<h3 data-id="title">Taskflow Library</h3>
+					<h3 data-id="title">Fundamental Building Blocks</h3>
 					<p data-id="task">A task</p><code>tf::Task</code>
 					<br><br>
 					<p data-id="graph">A task graph</p> <code>tf::Taskflow</code>
@@ -391,6 +391,7 @@
 				<!-- TASK DEPENDENCIES -->
 
 				<section>
+					<h3>TASK DEPENDENCIES</h3>
 					<pre><code class="hljs c++" data-trim data-line-numbers="|2|1|3-7|3|6|"><script type="text/template">
 						auto [t1, t2, t3, t4, t5, t6] = taskflow.emplace(
 							[](){}, [](){}, [](){}, [](){}, [](){}, [](){});
@@ -411,7 +412,136 @@
 						<br><br>
 						Looking at the resuling dependency graph we get this familiar diagram from the start of the presentation.
 						<br<br>
-						It doesnt matter if we do t1.precede(t2) or t2.succeede(t1), both variants describe the same dependency. The only difference is that it is easy to pass many parameters to a single function so when a node has more input dependencies than output then I tend to use succeed and when it has more output dependencies thenI tend to use precede.
+						It doesnt matter if we do t1.precede(t2) or t2.succeede(t1), both variants describe the same dependency. The only difference is that it is easy to pass many parameters to a single function so when a node has more input dependencies than output then I tend to use succeed and when it has more output dependencies then I tend to use precede.
+					</aside>
+				</section>
+
+				<!-- PART IV -->
+				<!-- Dynamic Tasks -->
+
+				<section>
+					<h3>DYNAMIC TASKS</h3>
+					<p>Tasks that might not exist.</p>
+					<aside class="notes">
+						We don't always know ahead of time whether a particular task will need to be run. For this case Taskflow provides dynamics tasks. A dynamic task is one that may contain child tasks and those tasks are created at runtime when the parent task is run. This makes it possible for earlier tasks to control what later tasks does.
+						<br><br>
+						Let's first look at a trivial example, and then one a smitten closer to a real-world use-case.
+					</aside>
+				</section>
+
+				<section>
+					<h3>Dynamic tasks</h3>
+					<pre><code class="hljs c++" data-trim data-line-numbers><script type="text/template">
+						tf::Task parent = taskflow.emplace(
+							[](tf::Subflow& subflow) {
+								tf::Task child = subflow.emplace([]() {});
+							});
+					</script></code></pre>
+					<aside class="notes">
+						We tell Taskflow that a task is dynamic by providing a callback that takes a Subflow parameter. A subflow is similar to a taskflow in that we can emplace new tasks in it. The tasks we get back are just like any other and we can give then name add depdencies, and so on. We can create any number of child tasks, and the child tasks can themselves be dynamic tasks.
+						<br><br>
+						What's important to realize is that while tasks created on a taskflow object are  created before the task graph is executed, the tasks in the sublow are created while execution is ongoing. Some tasks may already have finished by the time the parent task is executed and the child task created.
+						<br><br>
+						Another important thing is that the child task is run immediately after the parent callback returns. This means that any task that has a dependency on the parent task also has an transitive dependency on the child task.
+						<br><br>
+						The child task is "inside" the parent task.
+					</aside>
+				</section>
+
+				<section>
+					<h3>DYNAMIC TASKS</h3>
+					<pre><code class="hljs c++" data-trim data-line-numbers="|1|4|6,7|8-10|13-15|18-26|29-34|36-44|46-48|50-57"><script type="text/template">
+						class Space
+						{
+						public:
+							void emplaceTasks(tf::Taskflow& taskflow);
+
+							void broadPhase();
+							void nearPhase(tf::Subflow& subflow);
+							void nearPhaseSphereSphere();
+							void nearPhaseSphereBox();
+							void nearPhaseBoxBox();
+
+						private:
+							int m_numSphereSperePairs {0};
+							int m_numSphereBoxPairs {0};
+							int m_numBoxBoxPairs {0};
+						};
+
+						void Space::emplaceTasks(tf::Taskflow& taskflow)
+						{
+							tf::Task broadPhaseTask = taskflow.emplace(
+								[this]() { broadPhase(); });
+
+							tf::Task nearPhasesTask = taskflow.emplace(
+								[this](tf::Subflow& subflow) { nearPhase(subflow); });
+
+							broadPhaseTask.precede(nearPhasesTask);
+						}
+
+						void Space::broadPhase()
+						{
+							m_numSphereSperePairs = 1;
+							m_numSphereBoxPairs = 0;
+							m_numBoxBoxPairs = 1;
+						}
+
+						void Space::nearPhase(tf::Subflow& subflow)
+						{
+							if (m_numSphereSperePairs > 0)
+								subflow.emplace([this]() { nearPhaseSphereSphere(); });
+							if (m_numSphereBoxPairs > 0)
+								subflow.emplace([this]() { nearPhaseSphereBox(); })
+							if (m_numBoxBoxPairs > 0)
+								subflow.emplace([this]() { nearPhaseBoxBox(); })
+						}
+
+						void Space::nearPhaseSphereSphere(){}
+						void Space::nearPhaseSphereBox(){}
+						void Space::nearPhaseBoxBox(){}
+
+						int main()
+						{
+							Space space;
+							tf::Executor executor;
+							tf::Taskflow taskflow;
+							space.emplaceTasks(taskflow);
+							executor.run(taskflow).wait();
+						}
+
+					</script></code></pre>
+					<aside class="notes">
+						Let's move to a larger example, one that well need to page through bit by bit. I'm using a somewhat more real-world example here, with a two-phase collision detection implementation.
+						<br><br>
+						We have a class named Space that handles all collision-detection tasks.
+						<br><br>
+						It has en emplaceTasks function that is kind analogus to our current createUpdateTask.
+						<br><br>
+						This function will create two tasks, one for broad-phase and one for narrow-phase. The broadPhase function is just like all the other work callbacks we've seen: a function with no parameters.
+						In our example it finds all shape pairs that are close to each other and groups them by shape types.
+						The nearPhase function is different. It takes a Subflow parameter. This is what tells Taskflow that this task is not a static task but a dynamic one. A task that can create internal child tasks.
+						<br><br>
+						The near-phase task will create a child task for every shape type pair, but only if the broad-phase found at least one shape pair with those types.
+						<br><br>
+						Space has some internal state. Here we simplify it to just home may shape pairs there are for each type-pair. It is the responsibility of broad-phase to update these values.
+						<br><br>
+						Let's have a look at emplaceTasks. It's pretty simple. It creates two tasks in the given Taskflow, one for broad-phase and one for near-phase. We could have placed the entire implementation of these two functions within the lambdas, but I find it more readable to keep the implementation in their own functions and have the callback we give to Taskflow just call the  class member function, passing on the parameters. Notice that when creating the near-phase task we pass a lambda that takes a Subflow parameter, which we pass on to the member function. Lastly we make sure the narrow-phase task isn't allowed to start until the broad-phase task has completed.
+						<br><br>
+						The broadPhase implementation is just a placeholder here. Pretend we found some  sphere-sphere pairs and some box-box pairs, but no sphere-box pairs.
+						<br><br>
+						Here comes the interesting bit. The parent task of the near-phase subflow checks the result of the broad-phase and creates only the tasks that have anything to do. The others are simply skipped. Rember that in our example we have sphere-sphere and box-box pairs but no sphere-box pair.
+						<br><br>
+						The actual near-phase computation we don't care about here.
+						<br><br>
+						The implementation of main shouldn't present any surprises. We create an instance of our Space class, an executor and a Taskflow as we always do, let the Space instance create it's tasks in the Taskflow and then pass it to the executor to run it.
+					</aside>
+				</section>
+
+				<section>
+					<h3>Dynamic Tasks</h3>
+					<img src="images/work_if_needed.svg">
+					<aside class="notes">
+						The result of all this is a task graph with a broad-phase static task and a near-phase subflow with two near-phase calls. Notice that here there is no sphere-box task in the near-phase subflow but in a working simulation the set of tasks could change from time-step to time-step.
 					</aside>
 				</section>
 
