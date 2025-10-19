@@ -15,14 +15,14 @@ void increment_counter()
 	++counter;
 }
 
-int is_goal_reached()
-{
-	return counter >= goal;
-}
-
 void print_counter()
 {
-	std::cout << "Counter is " << counter << ".\n";
+	std::cout << counter << " / " << goal << std::endl;
+}
+
+int is_goal_reached()
+{
+	return counter == goal;
 }
 
 int main()
@@ -31,11 +31,13 @@ int main()
 	tf::Executor executor;
 
 	tf::Task increment_counter = taskflow.emplace(::increment_counter);
-	tf::Task is_goal_reached = taskflow.emplace(::is_goal_reached);
 	tf::Task print_counter = taskflow.emplace(::print_counter);
+	tf::Task is_goal_reached = taskflow.emplace(::is_goal_reached);
+	tf::Task done = taskflow.placeholder();
 
-	increment_counter.precede(is_goal_reached);
-	is_goal_reached.precede(increment_counter, print_counter);
+	increment_counter.precede(print_counter);
+	print_counter.precede(is_goal_reached);
+	is_goal_reached.precede(increment_counter, done);
 
 	// Cannot run this taskflow because it doesn't have any root tasks.
 	// increment_counter is not a root task because even weak dependencies
@@ -44,8 +46,9 @@ int main()
 
 	taskflow.name("Failed Loop");
 	increment_counter.name("Increment Counter");
-	is_goal_reached.name("Is Goal Reached");
 	print_counter.name("Print Counter");
+	is_goal_reached.name("Is Goal Reached");
+	done.name("Done");
 	dumpToFile(taskflow, "failed_loop.dot");
 
 	return 0;
