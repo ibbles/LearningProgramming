@@ -799,6 +799,58 @@
 						This may look OK since Increment Counter doesn't have any strong dependencies and we may expect it to start running as soon as the task graph is given to the executor. However, Taskflow only considers tasks with no dependencies at all, not even weak ones, to be root tasks. So this will do nothing. Taskflow will enqueue zero tasks, see that the queue is empty, and return from executor.run immediately. In larger systems with many sub-graphs within a single task graph this is important to keep in mind since it can result in rarely needed work not being done when it should.
 					</aside>
 				</section>
+
+
+				<!-- PART V -->
+				<!-- GAUSS-SEIDEL -->
+
+				<section data-auto-animate>
+					<h3 data-id="title-gauss">Gauss-Seidel</h3>
+					<p class="fragment fade-in" data-id="subtitle-gauss">We now have enough knowledge to write a Gauss-Seidel solver.</p>
+				</section>
+
+				<section data-auto-animate>
+					<h3 data-id="title-gauss">Gauss-Seidel</h3>
+					<p data-id="subtitle-gauss">Assume the following functions have been given:</p>
+					<pre data-id="code-gauss"><code class="hljs c++" data-trim data-line-numbers><script type="text/template">
+						random_A
+						zero_x
+						read_b
+						update_x
+						compute_residual
+						record_trajectory
+						should_loop
+						print_result
+					</script></code></pre>
+					<aside class="notes">
+						Your task is to decide which tasks should be static, dynamic, or a branch, and to arrange them with the correct dependencies.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h3 data-id="title-gauss">Gauss-Seidel</h3>
+					<p data-id="subtitle-gauss">Let's sketch visually first.</p>
+					<aside class="notes">
+						Prepare some way for the sutdents to collaborate in a drawing program.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h3 data-id="title-gauss">Gauss-Seidel</h3>
+					<p data-id="subtitle-gauss">Now code it.</p>
+					<aside class="notes">
+						Run once without dependencies first, to show the thread sanitizer output.
+					</aside>
+				</section>
+
+
+				<!-- PART VI -->
+				<!-- OTHER FEATURES -->
+
+
+				<section>
+					<h3>Other Features</h3>
+				</section>
 			</div>
 		</div>
 
