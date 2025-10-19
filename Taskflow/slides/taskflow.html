@@ -541,7 +541,9 @@
 					<h3>Dynamic Tasks</h3>
 					<img src="images/work_if_needed.svg">
 					<aside class="notes">
-						The result of all this is a task graph with a broad-phase static task and a near-phase subflow with two near-phase calls. Notice that here there is no sphere-box task in the near-phase subflow but in a working simulation the set of tasks could change from time-step to time-step.
+						The result of all this is a task graph with a broad-phase static task and a near-phase subflow with two near-phase child tasks. Notice that here there is no sphere-box task in the near-phase subflow. In a working simulation the set of tasks could change from time-step to time-step.
+						<br><br>
+						This is an important point to be aware of. The child tasks doesn't exist until they are creaatd during task graph execution so there is no way to create one of these visualizations of the entire task graph with all possible child tasks. The visualization only captures one specific execution of the task graph.
 					</aside>
 				</section>
 
