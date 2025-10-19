@@ -144,7 +144,7 @@ void print_result()
 	std::cout << "  |" << r[0] << "|\n";
 	std::cout << "  |" << r[1] << "|\n";
 	std::cout << '\n';
-	std::cout << "Residual norm: " << get_residual_norm() << '\n';
+	std::cout << "Residual norm: " << std::scientific << get_residual_norm() << '\n';
 	std::cout << "Iterations: " << num_iterations << '\n';
 	std::cout << "Trajectory: \n";
 	for (const Step& step : trajectory)

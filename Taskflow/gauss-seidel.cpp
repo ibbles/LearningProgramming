@@ -54,10 +54,16 @@ void zero_x()
 
 void read_b()
 {
+// Whether to use user-supplied values or hard-coded ones.
+#if 1
 	std::cout << "b[0]? ";
 	std::cin >> b[0];
 	std::cout << "b[1]? ";
 	std::cin >> b[1];
+#else
+	b[0] = 2.0;
+	b[1] = 8.0;
+#endif
 }
 
 void compute_residual()
@@ -144,7 +150,7 @@ void print_result()
 	std::cout << "  |" << r[0] << "|\n";
 	std::cout << "  |" << r[1] << "|\n";
 	std::cout << '\n';
-	std::cout << "Residual norm: " << get_residual_norm() << '\n';
+	std::cout << "Residual norm: " << std::scientific << get_residual_norm() << '\n';
 	std::cout << "Iterations: " << num_iterations << '\n';
 	std::cout << "Trajectory: \n";
 	for (const Step& step : trajectory)
