@@ -544,9 +544,70 @@
 						The result of all this is a task graph with a broad-phase static task and a near-phase subflow with two near-phase child tasks. Notice that here there is no sphere-box task in the near-phase subflow. In a working simulation the set of tasks could change from time-step to time-step.
 						<br><br>
 						This is an important point to be aware of. The child tasks doesn't exist until they are creaatd during task graph execution so there is no way to create one of these visualizations of the entire task graph with all possible child tasks. The visualization only captures one specific execution of the task graph.
+						<br><br>
+						Also, the child tasks are by default cleared at the end of the task execution to avoid wasting memory which means they won't show up at all. To prevent that we must call 'retain(true)' on the subflow instance.
 					</aside>
 				</section>
 
+				<section>
+					<h3>Dynamic Tasks</h3>
+					<pre><code class="hljs c++" data-trim data-line-numbers="|22-33|28-31|6-16|3-4|18,19|"><script type="text/template">
+					int spawn(int n, tf::Subflow& subflow)
+					{
+						if (n < 2)
+							return n;
+
+						int result1;
+						tf::Task task1 = subflow.emplace(
+							[n, &result1](tf::Subflow& subsubflow) {
+								result1 = spawn(n - 1, subsubflow);
+							});
+
+						int result2;
+						tf::Task task2 = subflow.emplace(
+							[n, &result2](tf::Subflow& subsubflow) {
+								result2 = spawn(n - 2, subsubflow);
+							});
+
+						subflow.join();
+						return result1 + result2;
+					}
+
+					int main()
+					{
+						tf::Executor executor;
+						tf::Taskflow taskflow;
+						int n {5};
+						int result {0};
+						tf::Task task = taskflow.emplace(
+							[n, &result](tf::Subflow& subflow) {
+								result = spawn(n, subflow);
+							});
+						executor.run(taskflow).wait();
+					}
+					</script></code></pre>
+					<aside class="notes">
+						Since a subflow is basically the same as a taskflow we can put dynamic tasks inside a dynamic task, creating recursively hirarchical subflows. This way we can implement recursive algorithms. The classical example is the Fibonacci sequence. Let's scroll down to main and look at that first.
+						<br><br>
+						Specifically when we create the root task.
+						<br><br>
+						We create a single task from a lambda that captures the n and result variables and when run forwards those to the spawn function.
+						<br><br>
+						The spawn function does pretty much the same thing, but twice and with smaller numbers for n.
+						<br><br>
+						And with a base case.
+						<br><br>
+						And finally returns the sum of the sub-results after joining with the child tasks.
+					</aside>
+				</section>
+
+				<section>
+					<h3>Dynamic tasks</h3>
+					<img src="images/fibonacci.svg">
+					<aside class="notes">
+						The result is a tree structure with a lot of repeated calculations. This is not the best way to compute Fibonacci numbers, but it is a good way to demonstrate recursive algorithms.
+					</aside>
+				</section>
 			</div>
 		</div>
 
