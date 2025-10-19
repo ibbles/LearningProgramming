@@ -23,4 +23,5 @@ if test "$dark_mode" = "dark-mode"
 	sed -i 's/<text /<text fill="white" /g' "$target"
 	sed -i 's/stroke="blue"/stroke="darkgray"/g' "$target"
 	sed -i 's/fill="blue"/fill="darkgray"/g' "$target"
+	sed -i 's/fill="aquamarine"/fill="none"/g' "$target"
 end
