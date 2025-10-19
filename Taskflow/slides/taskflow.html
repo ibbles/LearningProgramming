@@ -23,6 +23,8 @@
 
 				<!-- PART I -->
 				<!-- INTRODUCTION -->
+
+
 				<section>
 					<h1 class="r-fit-text">Taskflow - A Task Graph Library</h1>
 					<p>Subtitle?</p>
@@ -118,7 +120,7 @@
 				<section>
 					<h3>Example Task Graph</h3>
 					<img src="./images/example_task_graph.svg">
-					<p>Once Task 1 has completed we can run Task 2 and 4 in parallel.</p>
+					<p>Once Task 1 has completed we can run Task 2 and 3 in parallel.</p>
 				</section>
 
 				<section>
@@ -170,8 +172,10 @@
 					</aside>
 				</section>
 
+
 				<!-- PART II -->
 				<!-- SIMPLEST POSSIBLE TASK GRAPH -->
+
 
 				<section data-auto-animate>
 					<h2 data-id="code-title">Simplest Possible Task Graph</h2>
@@ -387,15 +391,16 @@
 					</aside>
 				</section>
 
+
 				<!-- PART III -->
 				<!-- TASK DEPENDENCIES -->
 
+
 				<section>
 					<h3>TASK DEPENDENCIES</h3>
-					<pre><code class="hljs c++" data-trim data-line-numbers="|2|1|3-7|3|6|"><script type="text/template">
+					<pre><code class="hljs c++" data-trim data-line-numbers="|2|1|3-7|3|5|3-5"><script type="text/template">
 						auto [t1, t2, t3, t4, t5, t6] = taskflow.emplace(
 							[](){}, [](){}, [](){}, [](){}, [](){}, [](){});
-						t1.precede(t2, t3, t4);
 						t1.precede(t2, t3);
 						t3.precede(t4, t5);
 						t6.succeed(t2, t4, t5);
@@ -410,14 +415,25 @@
 						<br><br>
 						Dependencies are created using the precede and succeed Task member functions. precede makes the task on the left precede, i.e. happen before, the tasks on the right. succeed, on the other hand, makes the task happen after the parameter tasks.
 						<br><br>
-						Looking at the resuling dependency graph we get this familiar diagram from the start of the presentation.
+						Looking at the resuling dependency graph we get this familiar diagram from the 	start of the presentation.
 						<br<br>
 						It doesnt matter if we do t1.precede(t2) or t2.succeede(t1), both variants describe the same dependency. The only difference is that it is easy to pass many parameters to a single function so when a node has more input dependencies than output then I tend to use succeed and when it has more output dependencies then I tend to use precede.
 					</aside>
 				</section>
 
+
 				<!-- PART IV -->
+				<!-- TASKFLOW BACKGROUND -->
+
+
+				 <section>
+
+				 </section>
+
+
+				<!-- PART V -->
 				<!-- Dynamic Tasks -->
+
 
 				<section>
 					<h3>DYNAMIC TASKS</h3>
@@ -610,7 +626,7 @@
 				</section>
 
 
-				<!-- PART IV -->
+				<!-- PART VI -->
 				<!-- BRANCHING -->
 
 
@@ -801,15 +817,16 @@
 				</section>
 
 
-				<!-- PART V -->
+				<!-- PART VII -->
 				<!-- GAUSS-SEIDEL -->
 
-				<section data-auto-animate>
+
+				<section data-auto-animate data-auto-animate-id="gauss-seidel">
 					<h3 data-id="title-gauss">Gauss-Seidel</h3>
 					<p class="fragment fade-in" data-id="subtitle-gauss">We now have enough knowledge to write a Gauss-Seidel solver.</p>
 				</section>
 
-				<section data-auto-animate>
+				<section data-auto-animate data-auto-animate-id="gauss-seidel">
 					<h3 data-id="title-gauss">Gauss-Seidel</h3>
 					<p data-id="subtitle-gauss">Assume the following functions have been given:</p>
 					<pre data-id="code-gauss"><code class="hljs c++" data-trim data-line-numbers><script type="text/template">
@@ -827,7 +844,7 @@
 					</aside>
 				</section>
 
-				<section data-auto-animate>
+				<section data-auto-animate data-auto-animate-id="gauss-seidel">
 					<h3 data-id="title-gauss">Gauss-Seidel</h3>
 					<p data-id="subtitle-gauss">Let's sketch visually first.</p>
 					<aside class="notes">
@@ -835,7 +852,7 @@
 					</aside>
 				</section>
 
-				<section data-auto-animate>
+				<section data-auto-animate data-auto-animate-id="gauss-seidel">
 					<h3 data-id="title-gauss">Gauss-Seidel</h3>
 					<p data-id="subtitle-gauss">Now code it.</p>
 					<aside class="notes">
@@ -844,12 +861,83 @@
 				</section>
 
 
-				<!-- PART VI -->
+				<!-- PART VIII -->
 				<!-- OTHER FEATURES -->
 
 
-				<section>
+				<section data-auto-animate  data-auto-animate-id="other-features">
 					<h3>Other Features</h3>
+					<p data-id=""></p>
+					<aside class="notes">
+						I this part I will quickly go through some features that Taskflow has that we might dive deeper into in a later presentation.
+					</aside>
+				</section>
+
+				<section data-auto-animate  data-auto-animate-id="other-features">
+					<h3>Other Features</h3>
+					<p data-id="subtitle">Composite Task Graph</p>
+					<img data-id="image" src="images/composite_task.jpg">
+					<aside class="notes">
+						Putting  one Taskflow into another.
+					</aside>
+				</section>
+
+				<section data-auto-animate  data-auto-animate-id="other-features">
+					<h3>Other Features</h3>
+					<p data-id="subtitle">Asynchronous Tasks</p>
+					<!--<img data-id="image" src="images/">-->
+					<aside class="notes">
+						Not sure what this means, exactly. Aren't all task graphs we don't wait for  asynchronous tasks?
+					</aside>
+				</section>
+
+				<section data-auto-animate  data-auto-animate-id="other-features">
+					<h3>Other Features</h3>
+					<p data-id="subtitle">Library of Parallel Algorithms</p>
+					<p data-id="text">Such as for_each, reduce, sort.</p>
+					<!--<img data-id="image" src="images/">-->
+					<aside class="notes">
+						Not sure how chunking works with for_each.
+					</aside>
+				</section>
+
+				<section data-auto-animate  data-auto-animate-id="other-features">
+					<h3>Other Features</h3>
+					<p data-id="subtitle">Pipelines</p>
+					<p data-id="text">Pipe data through a series of stages.</p>
+					<!--<img data-id="image" src="images/">-->
+					<aside class="notes">
+						Not used yet.
+					</aside>
+				</section>
+
+				<section data-auto-animate  data-auto-animate-id="other-features">
+					<h3>Other Features</h3>
+					<p data-id="subtitle">Executor Taskflow Management</p>
+					<p data-id="text">Run a task graph asynchronously, repeated a number of times, or until a condition is satisfied.</p>
+					<!--<img data-id="image" src="images/">-->
+					<aside class="notes">
+
+					</aside>
+				</section>
+
+				<section data-auto-animate  data-auto-animate-id="other-features">
+					<h3>Other Features</h3>
+					<p data-id="subtitle">Heterogeneous Computing</p>
+					<p data-id="text">Support for running and coordinating with GPU kernels.</p>
+					<!--<img data-id="image" src="images/">-->
+					<aside class="notes">
+
+					</aside>
+				</section>
+
+				<section data-auto-animate  data-auto-animate-id="other-features">
+					<h3>Other Features</h3>
+					<p data-id="subtitle">Profiling</p>
+					<img data-id="image" src="images/profiler.jpg">
+					<aside class="notes">
+						Has built-in profiling support, similar to our thread timelines. Here showing the results from a run of the Gauss-Seidel solver.
+					</aside>
 				</section>
 			</div>
 		</div>
