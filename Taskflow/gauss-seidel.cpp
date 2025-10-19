@@ -163,7 +163,7 @@ int main()
 	should_loop.precede(update_x, print_result);
 	update_x.precede(compute_residual);
 
-	dumpToFile(taskflow, "branch_and_loop.dot");
+	dumpToFile(taskflow, "gauss-seidel.dot");
 
 	executor.run(taskflow).wait();
 }

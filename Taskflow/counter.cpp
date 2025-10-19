@@ -10,6 +10,12 @@
 static int counter {0};
 static int goal {10};
 
+void read_goal()
+{
+	std::cout << "Goal? ";
+	std::cin >> goal;
+}
+
 void increment_counter()
 {
 	++counter;
@@ -30,23 +36,23 @@ int main()
 	tf::Taskflow taskflow;
 	tf::Executor executor;
 
-	tf::Task start = taskflow.emplace([](){});
+	tf::Task read_goal = taskflow.emplace(::read_goal);
 	tf::Task increment_counter = taskflow.emplace(::increment_counter);
 	tf::Task print_counter = taskflow.emplace(::print_counter);
 	tf::Task is_goal_reached = taskflow.emplace(::is_goal_reached);
 	tf::Task done = taskflow.emplace([](){});
 
-	start.precede(increment_counter);
+	read_goal.precede(increment_counter);
 	increment_counter.precede(print_counter);
 	print_counter.precede(is_goal_reached);
 	is_goal_reached.precede(increment_counter, done);
 
-	start.name("Start");
+	read_goal.name("Read Goal");
 	taskflow.name("Counter");
 	increment_counter.name("Increment Counter");
 	print_counter.name("Print Counter");
 	is_goal_reached.name("Is Goal Reached");
-	done.name("Print Counter");
+	done.name("Done");
 	dumpToFile(taskflow, "counter.dot");
 
 	executor.run(taskflow).wait();
