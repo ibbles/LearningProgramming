@@ -16,7 +16,7 @@
 </g>
 <g id="clust2" class="cluster">
 <title>cluster_p0x7238000000e0</title>
-<polygon fill="none" stroke="blue" points="166,-16 166,-163 456,-163 456,-16 166,-16"/>
+<polygon fill="none" stroke="darkgray" points="166,-16 166,-163 456,-163 456,-16 166,-16"/>
 <text fill="white" text-anchor="middle" x="311" y="-147.8" font-family="Times,serif" font-size="14.00">Subflow: Near&#45;Phase</text>
 </g>
 <!-- p0x723800000000 -->
@@ -46,8 +46,8 @@
 <!-- p0x723800007000&#45;&gt;p0x7238000000e0 -->
 <g id="edge2" class="edge">
 <title>p0x723800007000&#45;&gt;p0x7238000000e0</title>
-<path fill="none" stroke="blue" stroke-dasharray="5,2" d="M338.5,-97.12C319.79,-87.04 295.42,-73.92 275.36,-63.12"/>
-<polygon fill="blue" stroke="blue" points="276.95,-60 266.49,-58.34 273.63,-66.16 276.95,-60"/>
+<path fill="none" stroke="darkgray" stroke-dasharray="5,2" d="M338.5,-97.12C319.79,-87.04 295.42,-73.92 275.36,-63.12"/>
+<polygon fill="darkgray" stroke="darkgray" points="276.95,-60 266.49,-58.34 273.63,-66.16 276.95,-60"/>
 </g>
 <!-- p0x7238000070e0 -->
 <g id="node4" class="node">
@@ -58,8 +58,8 @@
 <!-- p0x7238000070e0&#45;&gt;p0x7238000000e0 -->
 <g id="edge3" class="edge">
 <title>p0x7238000070e0&#45;&gt;p0x7238000000e0</title>
-<path fill="none" stroke="blue" stroke-dasharray="5,2" d="M225.87,-96.05C227.65,-88.26 229.81,-78.82 231.81,-70.08"/>
-<polygon fill="blue" stroke="blue" points="235.24,-70.8 234.05,-60.28 228.41,-69.24 235.24,-70.8"/>
+<path fill="none" stroke="darkgray" stroke-dasharray="5,2" d="M225.87,-96.05C227.65,-88.26 229.81,-78.82 231.81,-70.08"/>
+<polygon fill="darkgray" stroke="darkgray" points="235.24,-70.8 234.05,-60.28 228.41,-69.24 235.24,-70.8"/>
 </g>
 </g>
 </svg>
