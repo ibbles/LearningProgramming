@@ -449,6 +449,9 @@ Unfortunately the name of the inner Taskflow is not displayed in the diagram.
 
 There is a built-in profiler that records start and stop times of a task graph's execution.
 Run with the `TF_ENABLE_PROFILER` environment variable set to the path of a JSON file to write profiling data to.
+```shell
+env TF_ENABLE_PROFILER=taskflow_profiling.json  ./MY_APP
+```
 Paste the contents of the generated JSON file into the text box at https://taskflow.github.io/tfprof/.
 You can also self-host the profiler front-end, see https://github.com/taskflow/tfprof
 
@@ -458,7 +461,7 @@ You can also self-host the profiler front-end, see https://github.com/taskflow/t
 - Main thread not used as a worker.
 	- Can we turn it into a worker?
 - Seems difficult to debug.
-- Is it possible to do  optional diamond dependencies?
+- Is it possible to do optional diamond dependencies?
 	- That is, can I have a setup job, two parallel branches of independent jobs, and a teardown job where the teardown job has a dependency on a job in one of the branches that might not be executed due to condition tasks?
 # References
 
