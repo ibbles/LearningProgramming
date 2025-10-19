@@ -6,6 +6,33 @@
 #include <ios>
 #include <filesystem>
 #include <fstream>
+#include <mutex>
+
+struct LockedCout
+{
+	LockedCout()
+	{
+		s_mutex.lock();
+	}
+	~LockedCout()
+	{
+		s_mutex.unlock();
+	}
+
+	template<typename T>
+	std::ostream& operator<<(const T& value)
+	{
+		std::cout << value;
+		return std::cout;
+	}
+
+	static inline std::mutex s_mutex;
+};
+
+LockedCout lockedCout()
+{
+	return LockedCout();
+}
 
 inline void printTaskflow(tf::Taskflow& taskflow)
 {
