@@ -21,4 +21,6 @@ if test "$dark_mode" = "dark-mode"
 	sed -i 's/<polygon fill="white"/<polygon fill-opacity="0" fill="white"/g' "$target"
 	sed -i 's/stroke="black"/stroke="white"/g' "$target"
 	sed -i 's/<text /<text fill="white" /g' "$target"
+	sed -i 's/stroke="blue"/stroke="darkgray"/g' "$target"
+	sed -i 's/fill="blue"/fill="darkgray"/g' "$target"
 end
