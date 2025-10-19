@@ -690,6 +690,115 @@
 							The result is that we get this dependency graph.
 						</aside>
 				</section>
+
+				<section data-auto-animate>
+					<h3 data-id="title">Branching</h3>
+					<p data-id="sub-title">Weak dependencies can lead back up to earlier tasks.</p>
+					<p data-id="graph" class="fragment fade-in"><img src="./images/branch.svg"></p>
+					<aside class="notes">
+						Let's consider the weak dependencies again, and how they differ from the regular strong dependencies. In the regular case all input dependencies must be fullfilled before a task is run. For example, Even Or Odd cannot start until Read Data has completed because there is a strong dependency between them. Weak dependencies are different in that the sucesssor task is run immediately when a weak dependency is fullfilled, regardless of any other dependencies. Even if that task has already been run, in which case it, and all its sucessors, will be run again. This means that we can create loops in our task graph.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h3 data-id="title">Branching</h3>
+					<p data-id="sub-title">Weak dependencies can lead back up to earlier tasks.</p>
+					<p data-id="graph"><img src="./images/counter.svg"></p>
+					<aside class="notes">
+						Here is an example of a simple loop that increments a counter to a user-provided goal. We start by reading the goal and the repeatedly increment the counter until the goal is reached and we're done.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h3 data-id="title">Branching</h3>
+					<p data-id="sub-title">Weak dependencies can lead back up to earlier tasks.</p>
+					<pre data-id="code"><code class="hljs c++" data-trim data-line-numbers="|1-2|4-19|26-30|32-35"><script type="text/template">
+						static int counter {0};
+						static int goal {10};
+
+						void read_goal() {
+							std::cout << "Goal? ";
+							std::cin >> goal;
+						}
+
+						void increment_counter() {
+							++counter;
+						}
+
+						void print_counter() {
+							std::cout << counter << " / " << goal << std::endl;
+						}
+
+						int is_goal_reached() {
+							return counter == goal;
+						}
+
+						int main()
+						{
+							tf::Taskflow taskflow;
+							tf::Executor executor;
+
+							tf::Task read_goal = taskflow.emplace(::read_goal);
+							tf::Task increment_counter = taskflow.emplace(::increment_counter);
+							tf::Task print_counter = taskflow.emplace(::print_counter);
+							tf::Task is_goal_reached = taskflow.emplace(::is_goal_reached);
+							tf::Task done = taskflow.emplace([](){});
+
+							read_goal.precede(increment_counter);
+							increment_counter.precede(print_counter);
+							print_counter.precede(is_goal_reached);
+							is_goal_reached.precede(increment_counter, done);
+
+							executor.run(taskflow).wait();
+							return 0;
+						}
+					</script></code></pre>
+
+					<aside class="notes">
+						As before we use global variables for any shared data.
+						<br><br>
+						The work functions are nothing complicated. Notice that the is_goal_reached function returns an integer, making it a branch task.
+						<br><br>
+						As before we create one task per work function. We also create a done task that does nothing since the branch task must have somewhere to go when it's not looping back up. Taskflow provides placeholder tasks that is a better way to achive the same thing.
+						<br><br>
+						Most of the dependencies from a simple precede chain. The only exception is is_goal_reached that can either loop back up to increment_counter or fall down to done, which concludes the task graph.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h3 data-id="title">Branching</h3>
+					<p>Weak dependencies can lead back up to earlier tasks.</p>
+					<pre data-id="code"><code class="hljs c++" data-trim data-ln-start-from="32" data-line-numbers><script type="text/template">
+						read_goal.precede(increment_counter);
+						increment_counter.precede(print_counter);
+						print_counter.precede(is_goal_reached);
+						is_goal_reached.precede(increment_counter, done);
+					</script></code></pre>
+
+					<p data-id="graph"><img src="./images/counter.svg"></p>
+
+					<aside class="notes">
+						Looking at the precede calls next to the resulting task graph gives and overview of what happens. Notice that when is_goal_reached returns 0 we loop back up to increment counter.
+						<br><br>
+						If the number of iterations is known at compile time then we may believe that we can skip the Real Goal task and have Increment Counter as our root task, but let's see what happens when we do that.
+					</aside>
+				</section>
+
+				<section data-auto-animate>
+					<h3 data-id="title">Branching</h3>
+					<p>Weak dependencies can lead back up to earlier tasks.</p>
+					<pre data-id="code"><code class="hljs c++" data-trim data-ln-start-from="32" data-line-numbers><script type="text/template">
+						increment_counter.precede(print_counter);
+						print_counter.precede(is_goal_reached);
+						is_goal_reached.precede(increment_counter, done);
+					</script></code></pre>
+
+					<p data-id="graph"><img src="./images/failed_loop.svg"></p>
+
+					<aside class="notes">
+						This may look OK since Increment Counter doesn't have any strong dependencies and we may expect it to start running as soon as the task graph is given to the executor. However, Taskflow only considers tasks with no dependencies at all, not even weak ones, to be root tasks. So this will do nothing. Taskflow will enqueue zero tasks, see that the queue is empty, and return from executor.run immediately. In larger systems with many sub-graphs within a single task graph this is important to keep in mind since it can result in rarely needed work not being done when it should.
+					</aside>
+				</section>
 			</div>
 		</div>
 
