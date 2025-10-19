@@ -551,7 +551,7 @@
 
 				<section>
 					<h3>Dynamic Tasks</h3>
-					<pre><code class="hljs c++" data-trim data-line-numbers="|22-33|28-31|6-16|3-4|18,19|"><script type="text/template">
+					<pre><code class="hljs c++" data-trim data-line-numbers="|22-33|28-31|6-16|3-4|18,19"><script type="text/template">
 					int spawn(int n, tf::Subflow& subflow)
 					{
 						if (n < 2)
@@ -605,8 +605,90 @@
 					<h3>Dynamic tasks</h3>
 					<img src="images/fibonacci.svg">
 					<aside class="notes">
-						The result is a tree structure with a lot of repeated calculations. This is not the best way to compute Fibonacci numbers, but it is a good way to demonstrate recursive algorithms.
+						The result is a tree structure with a lot of repeated calculations. This is not the best way to compute Fibonacci numbers, but it is a good way to demonstrate recursive algorithms. And creating a whole bunch of subflows isn't the best way to do small-scale parallelism like this, the Taskflow library provides the Runtime class for this, which we may get to later if time allows. For now let's do some branching instead, another way to do control what tasks get to run.
 					</aside>
+				</section>
+
+
+				<!-- PART IV -->
+				<!-- BRANCHING -->
+
+
+				<section>
+					<h3>Branching</h3>
+					<p>A way to control where to go next.</p>
+					<aside class="notes">
+						At it's most basic level a branch in Taskflow is a task that choses which of its outgoint dependencies, i.e. which of the tasks that is precedes, that should be allowed to run. It is kinda like a switch statment. Let's look at an example.
+					</aside>
+				</section>
+
+				<section>
+					<h3>Branching</h3>
+					<img src="images/branch.svg">
+					<aside class="notes">
+						A branch node is visalized as a diamond and its outgoing dependency edges as dashed lines instead of solid. This means that they are weak dependencies. We'll get more into what this means later, for now let's focus on the numbers next to the dashed lines. This is how the branch task decides which task should be run next. The thing that defines a branch task in Taskflow is that the callback we give the task has an integer return value, and the value returned indentifies which outgoing dependency should be followed. Let's look at some code.
+					</aside>
+				</section>
+
+				<section>
+					<h3>Branching</h3>
+					<pre><code class="hljs c++" data-trim data-line-numbers="|1|3-6|8-10|12-14|16-18|25-28|30-31"><script type="text/template">
+						static int number {0};
+
+						void read_data() {
+							std::cout << "Data? ";
+							std::cin >> number;
+						}
+
+						int even_or_odd() {
+							return number % 2;
+						}
+
+						void print_even() {
+							std::cout << "Number " << number << " is even.\n";
+						}
+
+						void print_odd() {
+							std::cout << "Number " << number << " is odd.\n";
+						}
+
+						int main()
+						{
+							tf::Taskflow taskflow;
+							tf::Executor executor;
+
+							tf::Task read_data = taskflow.emplace(::read_data);
+							tf::Task even_or_odd = taskflow.emplace(::even_or_odd);
+							tf::Task print_even = taskflow.emplace(::print_even);
+							tf::Task print_odd = taskflow.emplace(::print_odd);
+
+							read_data.precede(even_or_odd);
+							even_or_odd.precede(print_even, print_odd);
+
+							executor.run(taskflow).wait();
+							return 0;
+						}
+						</script></code></pre>
+
+						<p class="fragment fade-in"><img src="./images/branch.svg"></p>
+
+						<aside class="notes">
+							We have a single piece of shared state, a number to determine whether it is even or odd.
+							<br><br>
+							We ask the user to provide the number, so that we can test with different values.
+							<br><br>
+							This is the branch task callback, a function that returns 0 if the number is even and 1 if it is odd. We must remember this mapping since it will become important later when we set up the precede list for the branch task.
+							<br><br>
+							A function to print even numbers.
+							<br><br>
+							And a function to print odd numbers.
+							<br><br>
+							In main we create a task for each of the functions listed above,
+							<br><br>
+							and set up a dependency from read_data to even_or_odd, so that the number is available by the time we need to look at it. We also add to outgoing dependencies to even_or_odd, the first, at index 0, being print_even, and the second, at index 1, being print_odd. This must match the return value from even_or_odd, it's return value is an index into this list.
+							<br><br>
+							The result is that we get this dependency graph.
+						</aside>
 				</section>
 			</div>
 		</div>
