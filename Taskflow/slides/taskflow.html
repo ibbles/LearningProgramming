@@ -425,9 +425,44 @@
 				<!-- PART IV -->
 				<!-- TASKFLOW BACKGROUND -->
 
+				<section data-auto-animate data-auto-animate-id="background">
+					<h3 data-id="title">Taskflow Background</h3>
+					<aside class="notes">
+						Let's talk briefly about the backroung of Taskflow, why it exists.
+					</aside>
+				</section>
 
-				 <section>
+				 <section data-auto-animate data-auto-animate-id="background">
+					<h3 data-id="title">Taskflow Background</h3>
+					<p>Developed in a DARPA project to speed up circuit design and CAD.</p>
+					<p>Scope include billions of tasks and hours of runtime.</p>
+					<p>Simultaneous mix of CPU and GPU tasks.</p>
 
+					<aside class="notes">
+						By CAD I don't think they mean machine design but assembling transistors on a chip in VLSI process and the optimization process involved in finding layouts and line routing for that.
+					</aside>
+				</section>
+
+				<section data-auto-animate data-auto-animate-id="background">
+					<h3 data-id="title">Taskflow Background</h3>
+					<p>Goals:</p>
+					<ul>
+						<li>Move away from loop-parallelism and DAG-graphs.</li>
+						<li>Support heterogeneous parallelism, irregular computational patterns, and complex control flow.</li>
+						<li>Single node execution.</li>
+						<li>Expressive programming model.</li>
+						<li>In-graph control flow.</li>
+						<li>Efficient at both small and large scale.</li>
+					</ul>
+
+					<aside class="notes">
+						Loop-parallelsim means OpenMP.
+						DAG-graphs means Intel Thread Building Blocks, and many other similar libraries.
+						<br><br>
+						In-graph control flow to let the runtime keep scheduling tasks without the need to synchronize with application logic to decide where to go next.
+						<br><br>
+						"Efficient" means that thread resource wasting is low during task scarsity conditions.
+					</aside>
 				 </section>
 
 
