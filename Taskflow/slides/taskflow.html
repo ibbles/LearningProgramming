@@ -27,12 +27,13 @@
 
 				<section>
 					<h1 class="r-fit-text">Taskflow - A Task Graph Library</h1>
-					<p>Subtitle?</p>
-					<p>A short introduction</p>
 					<p>Parallel programs made easy</p>
 					<aside class="notes">
-						I'm gonna be talking about computing, because I like computing.<br><br>
-						This is a presentation about Taskflow, the task graph library, and why we need such a thing.
+						I'm gonna be talking about computing, because I like computing. Especially performance.
+						<br><br>
+						This is a presentation about Taskflow, a task graph library, and why we need such a thing.
+						<br><br>
+						I didn't come up with the tag line, that's from the library authors. It is still to be determined whether the statement is true.
 					</aside>
 				</section>
 
@@ -42,16 +43,23 @@
 					<small><a href="https://www.karlrupp.net/2018/02/42-years-of-microprocessor-trend-data/">https://www.karlrupp.net/2018/02/42-years-of-microprocessor-trend-data/</a></small>
 
 					<aside class="notes">
-						For a while computer users enjoyed a steady pace of speed increases.<br><br>
-						This kept going until the early 2000's when we hit the walls.<br><br>
-						The power and frequency wall in particular.<br><br>
-						These are joined by the so called Dennard scaling that says that as the transistors get smaller they use less energy so that the energy density, heat per area, remains roughly constant even though the number of transistors increases.<br><br>
-						This stopped being the case somwhere around here, and since peak frequency is highly dependent on the voltage we can push through the transistors and heat is highly depenent on the voltage we hit a point where increasing the frequency and adding more and more tiny transistors lead to unmangeable heat generation.<br><br>
-						The famous Moore's law still doing alright but single-threaded performance has not keeping up with the number of transistors and have started to level off.<br><br>
-						Frequency not increasing much anymore and CPU / compiler makers are having trouble extracting more instruction level parallelism from straightline code.<br><br>
-						To combat this we got more cores.<br><br>
-						This means that those of us who remember the times where a new computer would make all programs run faster had to get acustomed to that not being the case anymore and we had to start working to make use all those new transistors hiding behind the second, and third, and ninetysixth core.<br><br>
-						The free lunch as over, as the saying goes.
+						Let's start with a bit of computer performance history
+						<br><br>
+						For a long while, starting long before my time, computer users enjoyed a steady pace of speed increases. Each time you bought a new computer your programs got faster. Or more realistically, you could add more crap to your programs and still have them run at acceptable speeds.
+						<br><br>
+						This kept going until the early 2000's when we hit the walls. The power and frequency walls in particular.
+						<br><br>
+						These are joined by the so called Dennard scaling that says that as transistors get smaller they use less energy so that the energy density, heat per area, remains roughly constant even though the number of transistors increase.
+						<br><br>
+						This stopped being the case somwhere around here, and since peak frequency is highly dependent on the voltage we can push through the transistors and heat is caused by voltage we hit a point where increasing the frequency and adding more and more tiny transistors lead to unmangeable heat generation.
+						<br><br>
+						The famous Moore's law still doing alright but single-threaded performance has not keeping up with the number of transistors and have started to level off because frequency not increasing much anymore and CPU and compiler makers are having trouble extracting more instruction level parallelism from straightline code.
+						<br><br>
+						To combat this we got more cores, which really started taking off around this time.
+						<br><br>
+						This means that those of us who remember the times where a new computer would make all programs run faster had to get acustomed to that not being the case anymore and we had to start working to make use all those new transistors hiding behind the second, and third, and ninetysixth core.
+						<br><br>
+						The free lunch was over, as the saying goes.
 					</aside>
 				</section>
 
@@ -68,35 +76,31 @@
 						<li><p class="fragment semi-fade-out" data-fragment-index="1">Fork-join</p></li>
 					</ul>
 					<aside class="notes">
-						Multiple cores means that we can no longer rely on single-threaded programs, we need to go parallel or concurrent.
+						So, somehow, we need more threads.
 						<br><br>
-						These mean different things, but for this discussion I'm going to ignore that.
+						Multiple cores means that we can no longer rely on single-threaded programs, we need to go parallel or concurrent. These words mean different things, but for this discussion I'm going to ignore that. Think multi-threaded and we sort of cover what we need.
 						<br><br>
-						Think multi-threaded and we sort of cover what we need.
-						<br><br>
-						Here are some ways of organizing a multi-threaded program.
-						<br><br>
-						These are not clear-cut implementation strategies but broad categories.
+						Here are some ways of organizing a multi-threaded program. These are not clear-cut implementation strategies but broad categories.
 						<br><br>
 						Manual threads means starting a new thread for each task that needs to be done. Think one for audio, one for physics, one for AI, one for graphics, one for IO, and so on in a video game.
 						<br><br>
-						Data parallel means that we have a serial main thread and whenever we have a large set of elements we need to perform the same operation on then we bring in all the other cores to chrunch the numbers. This is how OpenMP and GPUs work. The classical parallel-for concept.
+						Data parallel means that we have a serial main thread and only when we have a large set of elements we need to perform the same operation on do we bring in all the other cores to chrunch the numbers. This is how OpenMP and GPUs work. The classical parallel-for concept.
 						<br><br>
 						Producer / consumer can be used when we have one part of the program that through some process produces data and another part that reads that data and computes an output. If these are indenpendent then they can be run in parallel on different threads.
 						<br><br>
 						A pipeline can be though of a chain of producer / consumer pairs where each thread is both a consumer of its input and a producer of the output that becomes the input for the next thread.
 						<br><br>
-						A task graph is kinda like a branching pipeline where the output produced by one task may be consumed by multiple later tasks. In a task graph we rarely have one thread per task but a pool of worker threads that can be assigned any task that becomes ready to run. A task is typically short-lived while a pipeline is a steady-state construction where data flows through continuously.
+						A task graph is kinda like a branching pipeline where the output produced by one task may be consumed by multiple later tasks. In a task graph we rarely have one thread per task but a pool of worker threads that can be assigned any task that becomes ready to run. A task is typically short-lived and a task-graph has a well-defined beginning and end, while a pipeline is a steady-state construction where data flows through continuously.
 						<br><br>
-						The actor model models a system of indenpendent concurrently executing entities that listen for events and responds to them with some processing and possibly the generation of new events.
+						The actors / events model models a system of indenpendent concurrently executing entities that listen for events and responds to them with some processing and possibly the generation of new events that other actors running on other threads may reacts to.
 						<br><br>
-						Fork-join is a broad categorization that means that that is a main flow of logic that occasionally branches out to parallel computation and that the result from those parallel computations are collected back before the main flow continues. The data parallel model is an example of fork-join.
+						Fork-join is a broad categorization that means that that is a main flow of logic that occasionally branches out to parallel computation and that the result from those parallel computations are collected back before the main flow continues. The data parallel model is an example of fork-join, as are task-graphs if the application contains a bunch of separate task graphs run one after the other.
 						<br><br>
-						It is possible to combine these, which is what AGX Dynamcis does.
+						It is possible to combine these, which is what AGX Dynamcis does. Mainly using tasks and data parallel processing.
 						<br><br>
 						Today the focus will be on task graphs, which forms the basis for parallelization in AGX Dynamics and what the Taskflow library provides.
 						<br><br>
-						Taskflow also does GPU stuff but I'm not going to go into that part today.<br><br>
+						Taskflow also does GPU stuff but I'm not going to go into that part today. Something for another time.
 					</aside>
 				</section>
 
@@ -105,7 +109,11 @@
 					<p>Instead of chaining function calls together as the program is executed the structure of the computation is defined up-front in a task graph.</p>
 
 					<aside class="notes">
-						The "up-front" part is not as rigid as it may sound may expressed like this.
+						The Taskflow authors identifies it as a "task graph computing system". This means that ...
+						<br><br>
+						The "up-front" part is not as rigid as it may sound may expressed like this, but it is the basic idea.
+						<br><br>
+						But we wanted parallelism, where is the prallelism?
 					</aside>
 				</section>
 
@@ -115,12 +123,26 @@
 					<p>Dependencies between tasks represented as edges.</p>
 					<p>Execute tasks top-to-bottom.</p>
 					<p>Exploit task independence for parallelism.</p>
+
+					<aside class="notes">
+						We let the system find the parallelism by ...
+						<br><br>
+						Let's look at a small example.
+					</aside>
 				</section>
 
 				<section>
 					<h3>Example Task Graph</h3>
 					<img src="./images/example_task_graph.svg">
 					<p>Once Task 1 has completed we can run Task 2 and 3 in parallel.</p>
+
+					<aside class="notes">
+						This example dependency graph consists of six tasks and ...
+						<br><br>
+						(describe picture)
+						<br><br>
+						and is task 2 takes a long time then 2, 4, and 5 can all run in parallel. It is the reponsiblity of the task graph computing system to identify these independent tasks and assign them to worker threads.
+					</aside>
 				</section>
 
 				<section>
@@ -147,11 +169,11 @@
 						<br><br>
 						To realize all of this in an actual application we need three things.
 						<br><br>
-						Something to represent the tasks to execute. This includes both the work to be performed and metadata such as name, user data and type.
+						Something to represent the tasks to execute. This includes both the work to be performed and metadata such as name, maybe some user data and the task type.
 						<br><br>
-						Something to represent the dependencies between tasks, the dependency graph.
+						We need something to represent the dependencies between the tasks, the dependency graph.
 						<br><br>
-						A runtime that can run all tasks in the correct order.
+						And we need a runtime that can run all tasks in the correct order and in parallel when the dependencies hard harware allow.
 					</aside>
 				</section>
 
@@ -251,7 +273,7 @@
 						<br><br>
 						Instead we let the taskflow create the task for us by calling emplace.
 						<br><br>
-						The parameter to emplace is the code we want to have executed when the task is run. This can be anything that is callable with no arguments. Here we use a free function but it could just as well have been a lambda funciton or an object with a call operator.
+						The parameter to emplace is the code we want to have executed when the task is run. This can be anything that is callable with no arguments. Here we use a free function but it could just as well have been a lambda function or an object with a call operator.
 						<br><br>
 						The thing we get back is not the actual task but a handle to it. A handle that is small, cheap to pass around, and safe to copy. It's a pointer, basically. The actual data lives as a node within the task graph.
 					</aside>
@@ -302,7 +324,7 @@
 						<br><br>
 						Executor.run will cause the runtime to start running tasks using the worker threads. We can chose to either keep doing other things in the main thread or wait for the tasks to finish executing. Since we have nothing else to do in this example we wait.
 						<br><br>
-						I have not yet found a way to make the main thread participate in the task work, which is a bit limiting given that in AGX Dynamics we always run user supplied event listeners in the main thread. There is more to Taskflow that I haven't explored yet it is possible that this can be solved.
+						I have not yet found a way to make the main thread participate in the task work, which is a bit limiting given that in AGX Dynamics we always run user supplied event listeners in the main thread. There is more to Taskflow that I haven't explored yet so it is possible that there are ways to do this.
 					</aside>
 				</section>
 
@@ -348,7 +370,7 @@
 						}
 					</script></code></pre>
 					<aside class="notes">
-						This can compile and run. But we also want pretty picture, like the task graph example we saw in the introduction.
+						This can compile and run. But we also want pretty pictures, like the task graph example we saw in the introduction.
 					</aside>
 				</section>
 
@@ -417,7 +439,7 @@
 						<br><br>
 						Looking at the resuling dependency graph we get this familiar diagram from the 	start of the presentation.
 						<br<br>
-						It doesnt matter if we do t1.precede(t2) or t2.succeede(t1), both variants describe the same dependency. The only difference is that it is easy to pass many parameters to a single function so when a node has more input dependencies than output then I tend to use succeed and when it has more output dependencies then I tend to use precede.
+						It doesnt matter if we do t1.precede(t2) or t2.succeede(t1), both variants describe the same dependency. A usability difference is that it is easy to pass many parameters to a single function so when a node has more input dependencies than output then I tend to use succeed and when it has more output dependencies then I tend to use precede.
 					</aside>
 				</section>
 
@@ -428,7 +450,7 @@
 				<section data-auto-animate data-auto-animate-id="background">
 					<h3 data-id="title">Taskflow Background</h3>
 					<aside class="notes">
-						Let's talk briefly about the backroung of Taskflow, why it exists.
+						Let's talk briefly about the background of Taskflow, why it exists.
 					</aside>
 				</section>
 
@@ -439,7 +461,7 @@
 					<p>Simultaneous mix of CPU and GPU tasks.</p>
 
 					<aside class="notes">
-						By CAD I don't think they mean machine design but assembling transistors on a chip in VLSI process and the optimization process involved in finding layouts and line routing for that.
+						By CAD I don't think they mean machine design but assembling transistors on a chip in a VLSI process and the optimization process involved in finding layouts and efficient line routing for that.
 					</aside>
 				</section>
 
@@ -457,11 +479,13 @@
 
 					<aside class="notes">
 						Loop-parallelsim means OpenMP.
-						DAG-graphs means Intel Thread Building Blocks, and many other similar libraries.
+						DAG-graphs means Intel Threading Building Blocks, and many other similar libraries.
 						<br><br>
 						In-graph control flow to let the runtime keep scheduling tasks without the need to synchronize with application logic to decide where to go next.
 						<br><br>
 						"Efficient" means that thread resource wasting is low during task scarsity conditions.
+						<br><br>
+						OK, back to to the implementation again, to see how they achieved some of these goals.
 					</aside>
 				 </section>
 
@@ -474,7 +498,7 @@
 					<h3>DYNAMIC TASKS</h3>
 					<p>Tasks that might not exist.</p>
 					<aside class="notes">
-						We don't always know ahead of time whether a particular task will need to be run. For this case Taskflow provides dynamics tasks. A dynamic task is one that may contain child tasks and those tasks are created at runtime when the parent task is run. This makes it possible for earlier tasks to control what later tasks does.
+						We don't always know ahead of time whether a particular task will need to be run. For this case Taskflow provides dynamics tasks. A dynamic task is one that may contain child tasks and those tasks are created at runtime when the parent task is run. We have now left the "up-front" limitation I mentioned at the start, and this makes it possible for earlier tasks in the graph to control what later tasks does.
 						<br><br>
 						Let's first look at a trivial example, and then one a smitten closer to a real-world use-case.
 					</aside>
@@ -489,11 +513,11 @@
 							});
 					</script></code></pre>
 					<aside class="notes">
-						We tell Taskflow that a task is dynamic by providing a callback that takes a Subflow parameter. A subflow is similar to a taskflow in that we can emplace new tasks in it. The tasks we get back are just like any other and we can give then name add depdencies, and so on. We can create any number of child tasks, and the child tasks can themselves be dynamic tasks.
+						We tell Taskflow that a task is dynamic by providing a callback that takes a Subflow parameter. A subflow is similar to a taskflow in that we can emplace new tasks in it. The tasks we get back are just like any other and we can give them names, add depdencies, and so on. We can create any number of child tasks, and the child tasks can themselves be dynamic tasks.
 						<br><br>
-						What's important to realize is that while tasks created on a taskflow object are  created before the task graph is executed, the tasks in the sublow are created while execution is ongoing. Some tasks may already have finished by the time the parent task is executed and the child task created.
+						What's important to realize is that while tasks created on a taskflow object are  created before the task graph is executed, the tasks in the sublow are created while execution is ongoing. Some tasks may already have finished by the time the parent task is executed and the child tasks created.
 						<br><br>
-						Another important thing is that the child task is run immediately after the parent callback returns. This means that any task that has a dependency on the parent task also has an transitive dependency on the child task.
+						Another important thing is that the child tasks are run immediately after the parent callback returns. This means that any task that has a dependency on the parent task also has a transitive dependency on the child task.
 						<br><br>
 						The child task is "inside" the parent task.
 					</aside>
@@ -562,29 +586,29 @@
 
 					</script></code></pre>
 					<aside class="notes">
-						Let's move to a larger example, one that well need to page through bit by bit. I'm using a somewhat more real-world example here, with a two-phase collision detection implementation.
+						Let's move to a larger example, one that we'll need to page through bit by bit. I'm using a somewhat more real-world example here, with a two-phase collision detection implementation.
 						<br><br>
 						We have a class named Space that handles all collision-detection tasks.
 						<br><br>
-						It has en emplaceTasks function that is kind analogus to our current createUpdateTask.
+						It has en emplaceTasks function that is kind analogus to our current createUpdateTask in AGX Dynamics.
 						<br><br>
-						This function will create two tasks, one for broad-phase and one for narrow-phase. The broadPhase function is just like all the other work callbacks we've seen: a function with no parameters.
+						This function will create two tasks, one for broad-phase and one for narrow-phase. The broadPhase function is just like all the other work callbacks we've seen: a function with no parameters which means that it is a static task.
 						In our example it finds all shape pairs that are close to each other and groups them by shape types.
 						The nearPhase function is different. It takes a Subflow parameter. This is what tells Taskflow that this task is not a static task but a dynamic one. A task that can create internal child tasks.
 						<br><br>
 						The near-phase task will create a child task for every shape type pair, but only if the broad-phase found at least one shape pair with those types.
 						<br><br>
-						Space has some internal state. Here we simplify it to just home may shape pairs there are for each type-pair. It is the responsibility of broad-phase to update these values.
+						Space has some internal state. Here we simplify it to just how many shape pairs there are for each type-pair. It is the responsibility of broad-phase to update these values.
 						<br><br>
-						Let's have a look at emplaceTasks. It's pretty simple. It creates two tasks in the given Taskflow, one for broad-phase and one for near-phase. We could have placed the entire implementation of these two functions within the lambdas, but I find it more readable to keep the implementation in their own functions and have the callback we give to Taskflow just call the  class member function, passing on the parameters. Notice that when creating the near-phase task we pass a lambda that takes a Subflow parameter, which we pass on to the member function. Lastly we make sure the narrow-phase task isn't allowed to start until the broad-phase task has completed.
+						Let's have a look at emplaceTasks. It's pretty simple. It creates two tasks in the given Taskflow, one for broad-phase and one for near-phase. We could have placed the entire implementation of these two functions within the lambdas, but I find it more readable to keep the implementation in their own functions and have the callback we give to Taskflow just call the class member function, passing on any parameters. I have not found a way to give the member function  and the this pointer directly. Notice that when creating the near-phase task we pass a lambda that takes a Subflow parameter, which we pass on to the member function. Lastly we make sure the narrow-phase task isn't allowed to start until the broad-phase task has completed.
 						<br><br>
 						The broadPhase implementation is just a placeholder here. Pretend we found some  sphere-sphere pairs and some box-box pairs, but no sphere-box pairs.
 						<br><br>
-						Here comes the interesting bit. The parent task of the near-phase subflow checks the result of the broad-phase and creates only the tasks that have anything to do. The others are simply skipped. Rember that in our example we have sphere-sphere and box-box pairs but no sphere-box pair.
+						Here comes the interesting bit. The parent task of the near-phase subflow checks the results of the broad-phase and creates only the tasks that have anything to do. The others are simply skipped. Rember that in our example we have sphere-sphere and box-box pairs but no sphere-box pair.
 						<br><br>
 						The actual near-phase computation we don't care about here.
 						<br><br>
-						The implementation of main shouldn't present any surprises. We create an instance of our Space class, an executor and a Taskflow as we always do, let the Space instance create it's tasks in the Taskflow and then pass it to the executor to run it.
+						The implementation of main shouldn't present any surprises. We create an instance of our Space class, an executor and a Taskflow as we always do, we let Space create its tasks in the Taskflow and then pass it to the executor for execution.
 					</aside>
 				</section>
 
@@ -594,9 +618,9 @@
 					<aside class="notes">
 						The result of all this is a task graph with a broad-phase static task and a near-phase subflow with two near-phase child tasks. Notice that here there is no sphere-box task in the near-phase subflow. In a working simulation the set of tasks could change from time-step to time-step.
 						<br><br>
-						This is an important point to be aware of. The child tasks doesn't exist until they are creaatd during task graph execution so there is no way to create one of these visualizations of the entire task graph with all possible child tasks. The visualization only captures one specific execution of the task graph.
+						This is an important point to be aware of. The child tasks doesn't exist until they are created during task graph execution so there is no way to create one of these visualizations of the entire task graph with all possible child tasks. The visualization only captures one specific execution of the task graph.
 						<br><br>
-						Also, the child tasks are by default cleared at the end of the task execution to avoid wasting memory which means they won't show up at all. To prevent that we must call 'retain(true)' on the subflow instance.
+						Also, the child tasks are by default cleared at the end of the task execution to avoid wasting memory which means they won't show up at all. To prevent that we must call 'retain(true)' on the subflow instance when creating the child tasks.
 					</aside>
 				</section>
 
@@ -656,7 +680,7 @@
 					<h3>Dynamic tasks</h3>
 					<img src="images/fibonacci.svg">
 					<aside class="notes">
-						The result is a tree structure with a lot of repeated calculations. This is not the best way to compute Fibonacci numbers, but it is a good way to demonstrate recursive algorithms. And creating a whole bunch of subflows isn't the best way to do small-scale parallelism like this, the Taskflow library provides the Runtime class for this, which we may get to later if time allows. For now let's do some branching instead, another way to do control what tasks get to run.
+						The result is a tree structure with a lot of repeated calculations. This is not the best way to compute Fibonacci numbers, but it is a good way to demonstrate recursive algorithms. And creating a whole bunch of subflows isn't the best way to do small-scale parallelism like this, the Taskflow library provides the Runtime class for this, which we may get to later if time allows. For now let's do some branching instead, another way to control what tasks get to run.
 					</aside>
 				</section>
 
@@ -669,7 +693,7 @@
 					<h3>Branching</h3>
 					<p>A way to control where to go next.</p>
 					<aside class="notes">
-						At it's most basic level a branch in Taskflow is a task that choses which of its outgoint dependencies, i.e. which of the tasks that is precedes, that should be allowed to run. It is kinda like a switch statment. Let's look at an example.
+						At it's most basic level a branch in Taskflow is a task that choses which of its outgoing dependencies, i.e. which of the tasks that is precedes, that should be allowed to run. It is kinda like a switch statment. Let's look at an example.
 					</aside>
 				</section>
 
@@ -677,7 +701,7 @@
 					<h3>Branching</h3>
 					<img src="images/branch.svg">
 					<aside class="notes">
-						A branch node is visalized as a diamond and its outgoing dependency edges as dashed lines instead of solid. This means that they are weak dependencies. We'll get more into what this means later, for now let's focus on the numbers next to the dashed lines. This is how the branch task decides which task should be run next. The thing that defines a branch task in Taskflow is that the callback we give the task has an integer return value, and the value returned indentifies which outgoing dependency should be followed. Let's look at some code.
+						A branch node is visalized as a diamond and its outgoing dependency edges as dashed lines. This means that they are weak dependencies. We'll get more into what this means later, for now let's focus on the numbers next to the dashed lines. This is how the branch task decides which task should be run next. The thing that defines a branch task in Taskflow is that the callback we give the task has an integer return value, and the value returned indentifies which outgoing dependency should be followed. Let's look at some code.
 					</aside>
 				</section>
 
@@ -730,13 +754,13 @@
 							<br><br>
 							This is the branch task callback, a function that returns 0 if the number is even and 1 if it is odd. We must remember this mapping since it will become important later when we set up the precede list for the branch task.
 							<br><br>
-							A function to print even numbers.
+							We have a function to print even numbers.
 							<br><br>
 							And a function to print odd numbers.
 							<br><br>
 							In main we create a task for each of the functions listed above,
 							<br><br>
-							and set up a dependency from read_data to even_or_odd, so that the number is available by the time we need to look at it. We also add to outgoing dependencies to even_or_odd, the first, at index 0, being print_even, and the second, at index 1, being print_odd. This must match the return value from even_or_odd, it's return value is an index into this list.
+							and set up a dependency from read_data to even_or_odd, so that the number is available by the time we need to look at it. We also add two outgoing dependencies from even_or_odd. The first is print_even at index 0, and the second, at index 1, is print_odd. This must match the return value of even_or_odd, it's return value is an index into this list.
 							<br><br>
 							The result is that we get this dependency graph.
 						</aside>
@@ -747,7 +771,9 @@
 					<p data-id="sub-title">Weak dependencies can lead back up to earlier tasks.</p>
 					<p data-id="graph" class="fragment fade-in"><img src="./images/branch.svg"></p>
 					<aside class="notes">
-						Let's consider the weak dependencies again, and how they differ from the regular strong dependencies. In the regular case all input dependencies must be fullfilled before a task is run. For example, Even Or Odd cannot start until Read Data has completed because there is a strong dependency between them. Weak dependencies are different in that the sucesssor task is run immediately when a weak dependency is fullfilled, regardless of any other dependencies. Even if that task has already been run, in which case it, and all its sucessors, will be run again. This means that we can create loops in our task graph.
+						Let's consider the weak dependencies again, and how they differ from the regular strong dependencies.
+						<br><br>
+						In the regular case all input dependencies must be fullfilled before a task is run. For example, Even Or Odd cannot start until Read Data has completed because there is a strong dependency between them. Weak dependencies are different in that the sucesssor task is run immediately when a weak dependency is fullfilled, regardless of any other dependencies. Even if that task has already been run, in which case it, and all its sucessors, will be run again. This means that we can create loops in our task graph.
 					</aside>
 				</section>
 
@@ -756,7 +782,7 @@
 					<p data-id="sub-title">Weak dependencies can lead back up to earlier tasks.</p>
 					<p data-id="graph"><img src="./images/counter.svg"></p>
 					<aside class="notes">
-						Here is an example of a simple loop that increments a counter to a user-provided goal. We start by reading the goal and the repeatedly increment the counter until the goal is reached and we're done.
+						Here is an example of a simple loop that increments a counter to a user-provided goal. We start by reading the goal and then repeatedly increment the counter until the goal is reached and we're done.
 					</aside>
 				</section>
 
@@ -812,7 +838,7 @@
 						<br><br>
 						As before we create one task per work function. We also create a done task that does nothing since the branch task must have somewhere to go when it's not looping back up. Taskflow provides placeholder tasks that is a better way to achive the same thing.
 						<br><br>
-						Most of the dependencies from a simple precede chain. The only exception is is_goal_reached that can either loop back up to increment_counter or fall down to done, which concludes the task graph.
+						Most of the dependencies form a simple precede chain. The only exception is is_goal_reached that can either loop back up to increment_counter or fall down to done, which concludes the task graph.
 					</aside>
 				</section>
 
@@ -829,7 +855,7 @@
 					<p data-id="graph"><img src="./images/counter.svg"></p>
 
 					<aside class="notes">
-						Looking at the precede calls next to the resulting task graph gives and overview of what happens. Notice that when is_goal_reached returns 0 we loop back up to increment counter.
+						Looking at the precede calls next to the resulting task graph gives an overview of what happens. Notice that when is_goal_reached returns 0 we loop back up to increment counter.
 						<br><br>
 						If the number of iterations is known at compile time then we may believe that we can skip the Real Goal task and have Increment Counter as our root task, but let's see what happens when we do that.
 					</aside>
@@ -859,6 +885,9 @@
 				<section data-auto-animate data-auto-animate-id="gauss-seidel">
 					<h3 data-id="title-gauss">Gauss-Seidel</h3>
 					<p class="fragment fade-in" data-id="subtitle-gauss">We now have enough knowledge to write a Gauss-Seidel solver.</p>
+					<aside class="notes">
+						A solver.
+					</aside>
 				</section>
 
 				<section data-auto-animate data-auto-animate-id="gauss-seidel">
@@ -904,7 +933,7 @@
 					<h3>Other Features</h3>
 					<p data-id=""></p>
 					<aside class="notes">
-						I this part I will quickly go through some features that Taskflow has that we might dive deeper into in a later presentation.
+						In this part I will quickly go through some features that Taskflow has that we might dive deeper into in a later presentation.
 					</aside>
 				</section>
 
@@ -913,7 +942,7 @@
 					<p data-id="subtitle">Composite Task Graph</p>
 					<img data-id="image" src="images/composite_task.jpg">
 					<aside class="notes">
-						Putting  one Taskflow into another.
+						Putting  one Taskflow into another. Kinda like subflows, but not quite.
 					</aside>
 				</section>
 
@@ -922,7 +951,7 @@
 					<p data-id="subtitle">Asynchronous Tasks</p>
 					<!--<img data-id="image" src="images/">-->
 					<aside class="notes">
-						Not sure what this means, exactly. Aren't all task graphs we don't wait for  asynchronous tasks?
+						Not sure what this means, exactly. Aren't all task graphs we don't wait for  asynchronous tasks? I need to do some more reading here.
 					</aside>
 				</section>
 
@@ -973,6 +1002,16 @@
 					<aside class="notes">
 						Has built-in profiling support, similar to our thread timelines. Here showing the results from a run of the Gauss-Seidel solver.
 					</aside>
+				</section>
+
+
+				<!-- PART IX -->
+				<!-- END -->
+
+
+				<section>
+					<h3> I'm surprised we got this far</h3>
+					<p>Questions?</p>
 				</section>
 			</div>
 		</div>
