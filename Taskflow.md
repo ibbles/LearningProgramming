@@ -1,14 +1,16 @@
 Taskflow is a task graph computing system.
 This means that instead of chaining functions together as the program is executed the structure of the program is defined up-front in a task graph that is executed by a runtime.
-The motivation is to make it easier to write parallel programs.
+The motivation is to make it easier to write parallel and heterogeneous programs [(6)](https://youtu.be/MX15huP5DsM?t=22), which is critical for performance, by hiding as much as possible of the technical details of thread synchronization and concurrency control.
+This make it possible to write high performance software while maintaining high productivity [(6)](https://youtu.be/MX15huP5DsM?t=90).
+
 The following is an example graph from the Taskflow paper [(1)](https://taskflow.github.io/papers/tpds21-taskflow.pdf), we will dive into  what the different symbols mean throughout this note.
 ![](./images/taskflow/example_task_graph.jpg)
 
 The Taskflow C++ library provides an API for defining tasks, task graphs, and a runtime for executing them.
-These concepts are codified in three types:
+These concepts are codified in three types [(6)](https://youtu.be/MX15huP5DsM?t=152):
 - `tf::Task`: A representation of a piece of work.
-- `tf::Taskflow`: A collection of tasks and their dependencies.
-- `tf::Executor`: A runtime for executing task graphs.
+- `tf::Taskflow`: A collection of tasks and their dependencies, a task dependency graph.
+- `tf::Executor`: A runtime for executing task graphs, manages a set of worker threads.
 
 Taskflow provides a number of different task types with different features and characteristics.
 - Static task: A callback.
@@ -66,8 +68,20 @@ To create a `tf::Task` instance we call the `emplace` member function of the `tf
 This creates a `tf::Task` instance stored inside the `tf::Taskflow`.
 The return value of `tf::Taskflow::emplace` is one or more `tf::Task` instances, one for each callable passed to `emplace`.
 The `tf::Task` instances can be used to configure the created tasks, for example to add dependencies to other tasks or assign names to the tasks.
+`tf::Task` object is not the actual task, just a handle to it.
+The actual task is stored within the `tf::Taskflow` object.
 When a `tf::Taskflow` is run by an executor then the tasks within that `tf::Taskflow` are executed according to their dependencies, meaning that the callables held by the tasks are invoked by the runtime.
 
+When creating multiple tasks with a single call to `tf::Taskflow::emplace`, by passing multiple callable objects, the return value is a tuple containing one `tf::Task` for each which we can use structured bindings to assign to local variables [(6)](https://youtu.be/MX15huP5DsM?t=161).
+
+```cpp
+tf::Taskflow taskflow;
+auto [task_1, task_2, task_3] = taskflow.emplace(
+	[](){ std::cout <<  "Task 1\n"; }
+	[](){ std::cout <<  "Task 2\n"; }
+	[](){ std::cout <<  "Task 3\n"; }
+);
+```
 
 # Creating Task Dependencies
 
@@ -75,7 +89,7 @@ Tasks can either precede or succeed other tasks.
 A task that precede another task will run to completion before that other task starts.
 A task that succeeds another task will not start until that other task has run to completion.
 The relationship is symmetric, meaning that if a task A  precedes another task B then task B succeeds task A.
-We create these dependencies using member functions on `tf::Task`.
+We create these dependencies using member functions on `tf::Task` [(6)](https://youtu.be/MX15huP5DsM?t=173).
 
 ```cpp
 // Taskflow includes.
@@ -104,9 +118,19 @@ In this case we could achieve the same thing using `second_task.succeed(first_ta
 
 ![](./images/taskflow/creating_dependencies.jpg)
 
+
+# Running A Taskflow
+
+A taskflow is run by passing it to an executor [(6)](https://youtu.be/MX15huP5DsM?t=182), to one of the `tf::Executor::run` family of functions.
+This function returns a future which provides the `wait` function to block until the taskflow has finished executing.
+A taskflow having finished executing does not mean that all tasks in it has executed.
+Branching means that some tasks may be skipped.
+We are however guaranteed that no further task execution in the taskflow will happen after `wait` has returned.
+
+
 # Creating Multiple Tasks
 
-We can pass multiple callables to `tf::Taskflow::emplace`.
+We can pass multiple callables to `tf::Taskflow::emplace` [(6)](https://youtu.be/MX15huP5DsM?t=161).
 This causes multiple `tf::Task` objects to be created and returned in a tuple.
 C++ structured bindings doesn't allow us to name the type of the elements in the tuple, so we have to use `auto` instead of `tf::Task`.
 
@@ -144,10 +168,10 @@ int main()
 # Creating Dynamic Tasks
 
 So far we have been creating static tasks, meaning that we know exactly what is going to be executed when `tf::Executor::run` is called.
-Dynamic tasks lets us defer the task creation until runtime, when parts of the task graph has already been executed.
+Dynamic tasks lets us defer the task creation until runtime [(6)](https://youtu.be/MX15huP5DsM?t=1079), when parts of the task graph has already been executed.
 That is, an early task can communicate to a later task and influence the dynamic tasks that are created.
 
-We prepare for dynamic task creation by creating a task from a callable that takes a `tf::Subflow&` as its only parameter.
+We prepare for dynamic task creation by creating a task from a callable that takes a `tf::Subflow&` as its only parameter [(6)](https://youtu.be/MX15huP5DsM?t=1079).
 `tf::Subflow` is similar to `tf::Taskflow` but instead of passing it to a `tf::Executor` for execution it is executed immediately following the callback of the task it is associated with.
 The dynamic tasks are created much like regular tasks, by passing a callable to the `emplace` member function of `tf::Subflow`.
 We say that the task with the `tf::Subflow&` parameter is the parent task and the dynamic tasks, the child tasks, are spawned from the parent task.
@@ -200,6 +224,9 @@ int main()
 ![](./images/taskflow/dynamic_task.jpg)
 
 Unfortunately, we cannot see the child tasks of the dynamic task in the diagram since they don't have a permanent representation in the `tf::Taskflow`.
+(
+TODO: We need to call `subflow.retain(true)` inside `create_dynamic_tasks`.
+)
 
 Tasks that succeeds a parent task also succeeds the dynamic tasks spawned by that parent task.
 
@@ -216,7 +243,7 @@ Let's start with the basics.
 
 ## If-Else
 
-A condition task is one that chooses and schedules only one if its successors, all other successors are ignored.
+A condition task is one that chooses and schedules only one if its successors, all other successors are ignored [(6)](https://youtu.be/MX15huP5DsM?t=1408).
 Remember that the successors are the tasks that the conditional task precedes.
 The selection is made based on the return value if the conditional task, which is an index  into the list of successors.
 In the following dependencies setup example we create a situation where if the condition task returns 0 then the first task is scheduled, if the return value is 1 then the second task is scheduled, and if the return value is 3 then the third task is scheduled.
@@ -406,7 +433,7 @@ Perhaps there are other ways.
 
 # Composite Task Graphs
 
-It is possible to put one task graph inside another, so that when the internal graph is reached it is executed in its entirety before execution continues.
+It is possible to put one task graph inside another, so that when the internal graph is reached it is executed in its entirety before execution continues [(6)](https://youtu.be/MX15huP5DsM?t=1652).
 The dependency setup work just like with regular tasks.
 
 ```cpp
@@ -470,4 +497,4 @@ You can also self-host the profiler front-end, see https://github.com/taskflow/t
 - 3: [_TFProf_ by Dr. Tsun-Wei Huang @ github.com/taskflow](https://github.com/taskflow/tfprof)
 - 4: [_Taskflow Profiler_ @ taskflow.github.io](https://taskflow.github.io/tfprof/)
 - 5: [_Taskflow Handbook_ by Dr. Tsun-Wei Huang @ taskflow.github.io](https://taskflow.github.io/taskflow/pages.html)
-
+- 6: [_Taskflow: A Parallel and Heterogeneous Task Programming System Using Modern C++_ by Tsung-Wei Huang, CppCon @ youtube.com 2020](https://www.youtube.com/watch?v=MX15huP5DsM)
