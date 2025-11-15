@@ -351,6 +351,12 @@ git cherry-pick COMMIT [COMMIT..]
 
 Cherry-pick only picks exactly the commits you listed and not the entire history as a merge would.
 
+A commit that is an ancestor of `HEAD` cannot be cherry-picked.
+(
+Why not?
+TODO Try it and see what happens.
+)
+
 # Tags
 
 
@@ -405,6 +411,33 @@ git rebase -i NO_IDEA_WHAT_TO_PASS_HERE
 I don't know how well this method handles conflicts during the rebase steps.
 
 Since this rewrites history it is not safe to with commits that has been pushed.
+
+
+## Cherry-Pick Method
+
+This method applies only when we want to copy a collection of commits from one branch to another and change one of them in the process.
+
+Start with the receiving branch as the current one.
+
+Cherry-pick all commits up to and including the commit we want to change.
+In this example we have two such commits and `COMMIT_2` is the one we want to change.
+```shell
+git cherry-pick COMMIT_1 COMMIT_2
+```
+
+We now have the working copy in the state described  by the commit we want to change.
+We can now make the change.
+Commit with `--amend` to apply the change to the current commit, i.e. `COMMIT_2`.
+```shell
+git commit --amend
+```
+
+With the fix applied we can cherry-pick the rest of the commits.
+In this example we have one such commit, `COMMIT_3`.
+```shell
+git cherry-pick COMMIT_3
+```
+
 
 # Detached `HEAD`
 
