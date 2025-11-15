@@ -291,6 +291,27 @@ One of the advantages of rebasing over merging is that is produces a nicer looki
 Instead of the history branching and merging in a way that reflects the realities of software development and how the work was actually performed we throw all of that information away an instead present a neatly packaged lie.
 
 
+# Interactive Rebase
+
+During an interactive rebase the user can control the way the commits are applied.
+The control interface is a text file that is initialized by Git to contain a list of the relevant commits with their hashes and messages.
+Each line also contains a word that describe what should be done with the commit:
+- Keep: The commit is applied.
+- Drop: The commit is not applied.
+- Squash: The change contained  in the commit is included but not as a separate commit but instead inserted into one of the neighboring commits.
+	- Which one, above or below?
+By editing the file we can perform the following actions:
+- Keep the commit: Leave 
+- Reorder commits: By reordering the lines in the file.
+- Drop commits: By 
+
+Pass the `-i` flag to start an interactive rebase.
+```shell
+git rebase -i COMMIT
+```
+The operation performed here is to take all commits in the range from the first common ancestor of `HEAD` and `COMMIT` to the current commit and apply them on top of `COMMIT`.
+
+
 # Reset
 
 Moves a branch backwards along the parent references.
@@ -356,6 +377,34 @@ There are multiple ways to create a relative ref, here using `HEAD` as the base:
 	- Can be given multiple times: `HEAD^^^` means go to the third ancestor.
 - `HEAD~#` (tilde operator): Follow `#` parent links where `#` is an integer.
 
+
+#  Modifying An Ancestor Commit
+
+Sometimes we want to modify the changes contained in an older commit.
+There are multiple ways to achieve  this.
+
+## Interactive Rebase / Amend / Interactive Rebase Method
+
+Use an interactive rebase to move the commit we want to change to the end of the history.
+```shell
+git rebase -i COMMIT_TO_MODIFY^
+```
+Reorder the commits so that the  commit we want to change is at the top (Or is it bottom?).
+
+Make the wanted changes to the files in the working copy.
+Commit with `--amend` to insert the change into the already existing commit.
+```shell
+git commit --amend
+```
+
+Do another interactive rebase to reorder the now modified commit back to its original location.
+```shell
+git rebase -i NO_IDEA_WHAT_TO_PASS_HERE
+```
+
+I don't know how well this method handles conflicts during the rebase steps.
+
+Since this rewrites history it is not safe to with commits that has been pushed.
 
 # Detached `HEAD`
 
