@@ -1,51 +1,80 @@
 Git is a version control system.
-That means that it tracks how the contents of a set of files is changed over time.
-It is not a continuous tracking of every change make to the files.
-Instead we make explicit named snapshots.
+This means that it tracks how the contents of a set of files in a directory tree is changed over time.
+It is not a continuous tracking of every change make to the files, instead we make explicit named snapshots.
 The creation of such a snapshot is called to make a commit.
+The directory tree with files is called a working copy.
+The files Git needs to work, often stored in a directory  named `.git` is called a repository.
 
 Git is optimized for text files with line semantics.
-By "line semantics" I mean that each line is its own thing and we don't do line rewrapping/reflow like one would with a long paragraph of natural language text.
+By "line semantics" I mean that each line is its own thing and we don't do line rewrapping/reflow like one would do when editing a long paragraph of natural language text.
 Git has its origin in software development and is mostly used to store source code.
 
 The core of the Git version control system is the `git` executable.
-`git` is a CLI tool, meaning that we type `git` commands at a terminal.
+`git` is a CLI tool, meaning that we type `git` commands in a terminal.
 There are also may GUI Git tools, many of which invoke the `git` executable to perform actions.
 `git` is typically invoked as `git COMMAND` where `COMMAND` is some Git command that performs some action.
 This note describes many such Git commands.
 
 # Repository / Working Copy
 
-To create a new empty repository that working copies can be created from but that cannot itself be used as a working copy:
+A repository is a directory where the files and directories that Git needs, including the history of the files tracked by the repository, are stored.
+A working copy is a directory that holds the files being tracked by a Git repository, possibly with the content from an earlier commit and/or with local changes.
+A working copy always holds its repository in a `.git` directory in the root of the working copy.
+
+To create a new empty repository, also called a bare repository, that working copies can be created from but that cannot itself be used as a working copy:
 ```shell
-git init --bare --initial-branch=main .
+git init --bare .
 ```
 This will create the internal Git file system structure directly in the current directory.
 Can only be done in an empty directory.
 
-To create a new repository in the current working directory use the `init` command:
+We can also create a combined repository / working copy from a possibly non-empty directory:
 ```shell
-git init --initial-branch=main .
+git init .
 ```
 This will create the internal Git file system structure in a subdirectory named `.git`.
-Files and directories that already exists in the current working directory will not be modified.
+Files and directories that already exists in the current working directory will not be modified and can be tracked by adding them to a commit.
 
-To create a working copy from a previously created directory:
+Both ways to initialize a repository support giving a custom name to the initial branch:
+```shell
+git init [--bare] --initial-branch=main .
+```
+
+To create a working copy from a previously created repository:
 ```shell
 git clone URL [PATH]
 ```
+
 `URL` can be a file system path on the same machine.
+The optional path is the directory where we want the working copy to be created.
+If we don't specify a path then a directory named after the repository will be created in the current working directory.
+The target directory must be empty.
+
+
+## Repository / Working Copy Commands
+
+```shell
+# Create a new repository + working copy of the current working directory.
+git init .
+
+# Create a new bare repository in the current working directory.
+git int --bare .
+
+# Create a new working copy from a previously created repository.
+git clone URL [PATH]
+```
 
 
 # Commit
 
-A commit records the changes that was made to the file since the previous commit.
+A commit records the changes that was made to the tracked files since the previous commit.
 Such a change is sometimes called a delta.
-The sequence of all commits from the first when the file was created to the current one describes the history of the file and when the changes described by all those commits are applied one after the other we will arrive at the current version of the file.
-The previous commit is called the current commit's parent.
-The chain of parents going back to the initial commit is called the current commit's ancestors.
+The sequence of all commits from the one where the file(s) was added to the current one describes the history of the file and when the changes described by those commits are applied one after the other we will arrive at the current version of the file.
 
-The first commit in a Git repository is sometimes called the initial commit.
+The previous commit is called the current commit's parent.
+The chain of parents going back to the first commit is called the current commit's ancestors.
+The first commit in a Git repository is often called the initial commit.
+The commit we are currently on is called `HEAD`.
 
 A commit stores a bunch of information:
 - Which files are being changed by the commit.
@@ -57,16 +86,32 @@ A commit stores a bunch of information:
 - A hash that identifies the commit.
 	- The parent commit is stored as the parent commit's hash.
 
-A commit is created with the `git commit` command.
+A commit is created with:
+```shell
+git commit
+```
+This form will open a text editor where a commit message is be written.
+
+To supply the commit message directly use the `-m` flag:
+```shell
+git commit -m"MESSAGE"
+```
+
+A working copy is always on a particular commit, the current commit.
+This commit is called `HEAD` because it is the head of the history, the sequence of commits, that leads to the current state of the working copy.
+
 
 ## Commit Commands
 
-Create a new commit
 ```shell
+# Create a new commit. Opens a text editor for the commit message.
 git commit
 
+# Create a new commit with the given commit message.
 git commit -m"MESSAGE"
 ```
+
+
 # Branch
 
 A branch is a way to name sequences of commits.
@@ -129,6 +174,7 @@ git branch BRANCH_NAME
 git switch -c BRANCH_NAME  # New way.
 git checkout -b BRANCH_NAME  # Old way.
 ```
+
 # Merge
 
 A merge can be seen as the inverse of making a branch.
@@ -219,6 +265,12 @@ So after a rebase ALL commits on the branch are brand new commits and the old co
 One of the advantages of rebasing over merging is that is produces a nicer looking history.
 Instead of the history branching and merging in a way that reflects the realities of software development and how the work was actually performed we throw all of that information away an instead present a neatly packaged lie.
 
+
+# Detached `HEAD`
+
+
+
 # References
 
 - 1: [_Learn Git Branching_ @ learngitbranching.js.org](https://learngitbranching.js.org/)
+- 2: [_Finding what branch a Git commit came from_ @ stackoverflow.com 2010,2018](https://stackoverflow.com/questions/2706797/finding-what-branch-a-git-commit-came-from)
