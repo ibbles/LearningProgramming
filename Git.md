@@ -161,6 +161,21 @@ The third form, `git checkout -b`, both creates the new branch and checks it out
 `git checkout` has multiple different use-cases and `git switch` was introduced as a safer option to `git checkout` so that one doesn't accidentally perform one of `git checkout`'s other functions when a branch switch is intended.
 
 
+## Moving A Branch
+
+A branch can be moved, meaning that we can make a branch point to a different commit.
+```shell
+git branch -f BRANCH COMMIT
+```
+
+As an example, consider a case where we commit something bad to a branch named `feature/some-feature` and we want to take a step back.
+```shell
+git branch -f feature/some-feature feature/some-feature^
+```
+
+The `-f` (force) bit is required because normally `git branch` is used to create new branches, not modify existing branches.
+
+
 ## Branch Commands
 
 ```shell
