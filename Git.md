@@ -71,7 +71,9 @@ git commit -m"MESSAGE"
 
 A branch is a way to name sequences of commits.
 A branch is a named pointer to a specific commit.
-A working copy is always on a specific branch, unless it is in a detach head state.
+All ancestors if that commit are also considered part of that branch.
+Branches are used to logically divide up work.
+A working copy is always on a specific branch, unless the working copy is in a detach head state.
 You can see which branch the working copy is on with
 ```shell
 git branch --show-current
@@ -80,11 +82,32 @@ The branch pointer is updated to the new commit when we make a new commit while 
 Multiple branches can point to the same commit.
 When a commit is made only the current branch is advanced to the new commit.
 Other branches on the parent commit remain on the parent commit.
+List the local branches with
+```shell
+git branch
+```
+The current branch is marked with a `*`.
+
+To also list branches on remotes use the `--all` flag:
+```shell
+git branch --all
+```
 
 A repository starts of with a single default branch,  often named `main` or `master`.
 
+A new branch is created with one of:
+```shell
+git branch BRANCH_NAME
 
-Branches are used to logically divide up work.
+git checkout -b BRANCH_NAME
+
+git switch -c BRANCH_NAME
+```
+All three forms will create a new branch that points to the current commit, that is, `HEAD` is unchanged.
+With the first form, `git branch`, the new branch  will be created "in the background", i.e. it will not be made the current branch.
+The second form, `git switch -c`, is new, and experimental with Git 2.23, and is a way to manage branch switching that will replace `git checkout` for that purpose.
+The third form, `git checkout -b`, both creates the new branch and checks it out, i.e. makes it current.
+`git checkout` has multiple different use-cases and `git switch` was introduced as a safer option to `git checkout` so that one doesn't accidentally perform one of `git checkout`'s other functions when a branch switch is intended.
 
 
 ## Branch Commands
