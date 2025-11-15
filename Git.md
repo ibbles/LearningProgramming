@@ -287,6 +287,30 @@ One of the advantages of rebasing over merging is that is produces a nicer looki
 Instead of the history branching and merging in a way that reflects the realities of software development and how the work was actually performed we throw all of that information away an instead present a neatly packaged lie.
 
 
+# Identifying Commits
+
+Each commit has a hash and can be identified by that hash.
+The hashes should all be unique, if two commits have the same hash, a hash collision, then Git will be having trouble.
+Since they must be unique the hashes are quite long, to reduce the likelihood of hash collisions.
+Here is an example hash: `fed2da64c0efc5293610bdd892f82a58e8cbc5d8`.
+When identifying a commit using a hash we don't need to type out the entire hash.
+It is enough to type out enough characters to uniquely identify a single commit that exists within the repository.
+
+We can also use branches to identify commits.
+Each branch points to a commit and naming that branch also names the commit the branch points to.
+
+We can also identify commits based on their location relative to some other commit.
+This is called a relative ref.
+We can base a relative ref from a commit hash, a branch, a tag, or `HEAD`.
+
+There are multiple ways to create a relative ref, here using `HEAD` as the base:
+- `HEAD^` (caret operator): Move to the parent.
+	- If there are multiple parents then I assume the first  parent is used.
+		- TODO Verify the above.
+	- Can be given multiple times: `HEAD^^^` means go to the third ancestor.
+- `HEAD~#` (tilde operator): Follow `#` parent links where `#` is an integer.
+
+
 # Detached `HEAD`
 
 Normally a working copy is on a particular branch, meaning that the branch in question is current and `HEAD` points to the same commit as that branch.
