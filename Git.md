@@ -359,6 +359,22 @@ TODO Try it and see what happens.
 
 # Tags
 
+A tag is used to give a particular commit, a point in history, a name.
+Such names  are often used for releases.
+So we can have a `1.0` tag and a `1.1` tag and so on.
+
+Tags are similar to branches but instead of being updated when new commits are added, a tag is never moved.
+The only way to "move" a tag to a new commit is to delete it and create a new tag with the same name pointing to another commit.
+
+A tag is created with:
+```shell
+git tag NAME [COMMIT]
+```
+This creates a tag named `NAME` that points to the commit `COMMIT`.
+If `COMMIT` is not specified then `HEAD` is used.
+
+Since a tag cannot be updated by committing, checking out a tag will make the working copy enter a  detached `HEAD` state.
+
 
 # Identifying Commits
 
