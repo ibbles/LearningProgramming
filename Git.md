@@ -290,6 +290,31 @@ So after a rebase ALL commits on the branch are brand new commits and the old co
 One of the advantages of rebasing over merging is that is produces a nicer looking history.
 Instead of the history branching and merging in a way that reflects the realities of software development and how the work was actually performed we throw all of that information away an instead present a neatly packaged lie.
 
+## Multiple Rebases
+
+Git seems  to track commits as they move between locations.
+Here is a screenshot from https://learngitbranching.js.org/ the _Rebasing over 9000 times_ level.
+
+![one rebase done](./images/git/one_rebase_done.jpg)
+
+Here we have already rebased `side` from the old `C6` onto `bugFix`, which created `C4'`, `C5'`, and `C6'`.
+The goal is to rebase `another` onto `side` so that we get a fully linear history from `C0` to a newly created `C7'`.
+My worry was that, since `C4` is separate from `C4'` and `C5` if separate from `C5'`, Git would not realize that the rebase we just did already copied those commits and thus the rebase of `another` onto `side` would copy those commits again.
+Luckily, this is not what happens.
+Git knows the provenance of the `C#'` commits and realizes that the only commit in the `another` ancestry chain that needs to be copied is `C7`.
+So we get a single `C7'` after `C6'` and all is well.
+TODO How does this tracking work?
+
+
+## Rebase With Two Arguments
+
+By default rebase will rebase the current branch on top of the branch we pass as an argument.
+If we instead pass two branch arguments Git will rebase the second branch on top of the first branch.
+
+```shell
+git rebase NEW_BASE BRANCH_TO_MOVE
+```
+
 
 # Interactive Rebase
 
