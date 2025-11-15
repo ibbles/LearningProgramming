@@ -89,6 +89,70 @@ Branches are used to logically divide up work.
 
 ## Branch Commands
 
+# Merge
+
+A merge can be seen as the inverse of making a branch.
+A branch produces a situation where two (or more) separate commits have the same parent, a diverging fork.
+A merge is a commit that has two (or more) parents, a converging fork, a joining.
+Remember that a commit describes the state of the repository that is created by applying all the commit's ancestor commits from the initial commit up until the current commit.
+By having two parent commits a merge commit combines to parallel sequences of commits together.
+The merge commit says "I want to include all the work from this parent over here and this one over here.".
+If there are conflicting changes in the parallel commit paths that the creation of the merge will have a merge conflict that must be resolved before the merge commit can be created.
+So a marge commit describe not only which branches are being merged but also the additional changes necessary to resolve any merge conflicts.
+
+The workflow is:
+- Create and switch to branch.
+- Make changes and commits.
+- Merge.
+
+Just like regular commits, a merge commit is made on a particular branch.
+If we are on `main` and merge another branch then the commits in that branch's  history is merged into `main`.
+The other branch is left unchanged.
+If we are on the other branch and merge `main` the changes made on `main` since the other branch was created or last merged is brought into that other branch.
+
+
+## Fast-Forward Merge
+
+There are two kinds of merges.
+The one described above is the kind that creates a merge commit.
+A merge commit is required when there are commits in both of the merged branches.
+The other type of commit happens when there are new commits on the branch we are merging in but not on the current branch.
+In this case the branch we are merging in represents a set of pure additions to the current branch.
+There has never been any actual forking, the branch simply moved forward while the current branch was standing still.
+In this case Git can "fast-forward" the current branch to the merged branch's commit.
+By default `git merge` will do a fast-forward if possible and create a merge commit if required.
+If we want to force the creation of a merge commit even when a fast-forward would have been possible then we can give the `--no-ff` flag:
+```shell
+# Merge and force the creation ofa merge commit.
+git merge --no-ff
+```
+
+In some cases we may expect to be able to do a fast-forward but want to make sure that no merge commit is created unexpectedly. 
+By passing `--ff-only` we tell Git to abort the merge, i.e. do nothing, if a merge would have otherwise been created.
+```shell
+# Only allow fast-forward merge, abort if a merge commit would have been required.
+git merge --ff-only
+```
+
+Fast-forward is possible when the current branch is an ancestor of the branch being merged.
+In this case the merged branch has seen everything in the current branch.
+No conflicts are possible in this case since by definition there is nothing to conflict with.
+The current branch has not changed since the merged branch was created.
+
+
+## Merge Commands
+
+```shell
+# Bring changes from another branch into the current one.
+git merge OTHER_BRANCH
+
+# Create a merge commit even if a fast-forward would have been possible.
+git merge --no-ff OTHER_BRANCH
+
+# Only merge if a fast-forward is possible, abort otherwise.
+git merge --ff-only OTHER_BRANCH
+```
+
 # References
 
 - 1: [_Learn Git Branching_ @ learngitbranching.js.org](https://learngitbranching.js.org/)
