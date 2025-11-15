@@ -65,7 +65,7 @@ git clone URL [PATH]
 ```
 
 
-# Commit
+# Commits
 
 A commit records the changes that was made to the tracked files since the previous commit.
 Such a change is sometimes called a delta.
@@ -75,6 +75,10 @@ The previous commit is called the current commit's parent.
 The chain of parents going back to the first commit is called the current commit's ancestors.
 The first commit in a Git repository is often called the initial commit.
 The commit we are currently on is called `HEAD`.
+The commits form a directed asyclic graph rooted at the initial commit.
+The graph may have multiple leaf commits where each such commit typically represent the head of some development effort.
+`HEAD`, the current commit, is often one of the leaf commits.
+The contents of the files in the working copy reflects the state represented by the `HEAD` commit and all its ancestors, plus any local changes we may have made on top of that state.
 
 A commit stores a bunch of information:
 - Which files are being changed by the commit.
@@ -132,6 +136,8 @@ List the local branches with
 git branch
 ```
 The current branch is marked with a `*`.
+This means that `HEAD` points to the same commit as that branch.
+When we make a new commit in in this state both `HEAD` and the current branch is updated to point to that new commit.
 
 To also list branches on remotes use the `--all` flag:
 ```shell
@@ -268,6 +274,25 @@ Instead of the history branching and merging in a way that reflects the realitie
 
 # Detached `HEAD`
 
+Normally a working copy is on a particular branch, meaning that the branch in question is current and `HEAD` points to the same commit as that branch.
+Or rather, `HEAD` points to the branch, which points to the commit.
+If we make a new commit then both `HEAD` and the branch is updated to point to the new commit.
+Or rather, the branch is updated and since `HEAD` points to the branch `HEAD` tags along to the new commit.
+Our working copy is attached to that branch through `HEAD`.
+
+A working copy does not need to be attached to any branch.
+We can chose to attach it to a commit instead.
+In this case `HEAD` points directly to a commit instead of to a branch.
+This state is called detached `HEAD` since the commit we are currently on, `HEAD`, is not linked to any branch.
+There may still be branches that point to the same commit, but making new commits will not update any branch to point to that new commit.
+
+`HEAD` is a symbolic name that refers to the thing we are currently on, which may be a branch or a commit.
+When it is a commit then we are in a detach `HEAD` state.
+
+To detach `HEAD` from the current branch and point it directly to a commit, switch to that commit:
+```shell
+git switch HASH
+```
 
 
 # References
