@@ -176,6 +176,10 @@ git branch -f feature/some-feature feature/some-feature^
 The `-f` (force) bit is required because normally `git branch` is used to create new branches, not modify existing branches.
 
 
+`git branch` cannot be used to move the current branch.
+For this you need `git reset`.
+
+
 ## Branch Commands
 
 ```shell
@@ -285,6 +289,48 @@ So after a rebase ALL commits on the branch are brand new commits and the old co
 
 One of the advantages of rebasing over merging is that is produces a nicer looking history.
 Instead of the history branching and merging in a way that reflects the realities of software development and how the work was actually performed we throw all of that information away an instead present a neatly packaged lie.
+
+
+# Reset
+
+Moves a branch backwards along the parent references.
+It's like rewinding time for that branch and resetting it back to an earlier state.
+
+To move the current branch backwards one commit relative to `HEAD`:
+```shell
+git reset HEAD~1
+```
+
+A reset will not only move the current branch to another commit, it will also update the working copy to the state of that commit.
+
+Resetting a branch rewrites history.
+This can cause issues if done with branches that exists not only on our own machine.
+
+
+# Revert
+
+Create a new commit that does the opposite of another commit.
+This effectively undos the changes done by that other commit.
+Behaves just like a regular commit so there are no issues with using  this with shared branches.
+The other commit remains in the history but the changes it made are hidden by the changes in the created commit.
+
+```shell
+git revert HEAD~1
+```
+
+
+# Cherry-Pick
+
+A cherry-pick creates a copy of some commit and applies to to your current branch.
+It acts as-if a user had looked at the diff for the commit and hand-applied it to the working copy and the comiitted.
+
+```shell
+git cherry-pick COMMIT [COMMIT..]
+```
+
+Cherry-pick only picks exactly the commits you listed and not the entire history as a merge would.
+
+# Tags
 
 
 # Identifying Commits
