@@ -153,6 +153,32 @@ git merge --no-ff OTHER_BRANCH
 git merge --ff-only OTHER_BRANCH
 ```
 
+
+# Rebase
+
+Rebase is typically used when bringing changes in `main` back to a development branch so that the branch is kept up-to-date with other work that has been done and merged to `main`.
+Rebase is an alternative to merge when bringing changes in one branch into another.
+A merge takes two parallel series of commits and creates a new commit that has both of them as parents.
+That is, a merge merges two parallel paths into a single path.
+Rebase, on the other hand, makes it appear as-if all the work on the branch had been done on top of the current commit in `main` instead of the commit from which the branch was actually created.
+The file changes recorded in the commits on the branch are applied not to the original `main` commit but instead to the current `main` commit.
+The result of this is a set of new commits on the branch, and the old commits are discarded.
+In essence, a rebase takes the commits from their current place in the commit history and plots them down somewhere else.
+The places are the "bases" that the rebase name hints at.
+The branch was created from a particular base commit but now we want to move it to a new base.
+
+If the file changes recorded in the branch's commits are not compatible with the the contents of the working copy state of the new base commit then there is a merge conflict that must be resolved.
+The result of the merge conflict resolution is changes to the commits being moved so that they become compatible with the new base.
+So a rebase does not just move the branch from one base commit to another, it also changes the moved commits.
+Even if no changes are necessary to the file content changes stored with the moved commit the commits themselves are still changed since the parent of the first commit in the branch is changed.
+Since the parent commit is an integral part of a commit changing the base parent of the branch changes the hash of the first commit on the branch.
+Since the hash of the first commit changed the parent of the second commit must change to that new hash.
+Since the second commit had its parent changed this changes the hash of the second commit as well so we must also update the third commit and so on for all commits.
+So after a rebase ALL commits on the branch are brand new commits and the old commits are gone.
+
+One of the advantages of rebasing over merging is that is produces a nicer looking history.
+Instead of the history branching and merging in a way that reflects the realities of software development and how the work was actually performed we throw all of that information away an instead present a neatly packaged lie.
+
 # References
 
 - 1: [_Learn Git Branching_ @ learngitbranching.js.org](https://learngitbranching.js.org/)
