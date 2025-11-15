@@ -376,6 +376,33 @@ If `COMMIT` is not specified then `HEAD` is used.
 Since a tag cannot be updated by committing, checking out a tag will make the working copy enter a  detached `HEAD` state.
 
 
+## Describe
+
+Describe is used to find where we are in the repository relative to a tag.
+That is, it describes where `HEAD`, or some other commit, is relative to the closest tag.
+
+```shell
+git describe [REF]
+```
+
+The output of `git describe` has the following form:
+```
+TAG-NUM_COMMITS-gHASH
+```
+where
+- `TAG` is the closest ancestor tag in history.
+- `NUM_COMMITS`: The number of commits that separate the tag and and `REF`.
+	- If `NUM_COMMITS` is 1 then the  tag is the parent of `REF`.
+- `HASH`: The commit has of `REF`.
+
+I have no idea what the `g` means.
+TODO Figure out what the `g` means.
+
+There is a surprising corner case when the commit identified by `REF` is a target of a tag.
+One might thing that we would get `NUM_COMMITS` be 0 and `HASH` the has of the commit in question, but this is not what happens.
+Instead those parts of the output, and  the separating dashes are removed, breaking parsers everywhere.
+
+
 # Identifying Commits
 
 Each commit has a hash and can be identified by that hash.
