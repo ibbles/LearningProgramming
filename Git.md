@@ -112,6 +112,23 @@ The third form, `git checkout -b`, both creates the new branch and checks it out
 
 ## Branch Commands
 
+```shell
+# List local branches.
+git branch
+
+# List local and remote branches.
+git branch --all
+
+# Show the name of the current branch.
+git branch --show-current
+
+# Create a new branch in the background.
+git branch BRANCH_NAME
+
+# Create a new branch and switch to it.
+git switch -c BRANCH_NAME  # New way.
+git checkout -b BRANCH_NAME  # Old way.
+```
 # Merge
 
 A merge can be seen as the inverse of making a branch.
