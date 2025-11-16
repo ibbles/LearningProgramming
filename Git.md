@@ -42,10 +42,11 @@ git init [--bare] --initial-branch=main .
 
 To create a working copy from a previously created repository:
 ```shell
-git clone URL [PATH]
+git clone URL [DIRECTORY]
 ```
 
 `URL` can be a file system path on the same machine.
+For more on this see _Remotes_.
 The optional path is the directory where we want the working copy to be created.
 If we don't specify a path then a directory named after the repository will be created in the current working directory.
 The target directory must be empty.
@@ -146,6 +147,8 @@ git branch --all
 
 A repository starts of with a single default branch,  often named `main` or `master`.
 
+## Creating A  New Branch
+
 A new branch is created with one of:
 ```shell
 git branch BRANCH_NAME
@@ -160,6 +163,10 @@ The second form, `git switch -c`, is new, and experimental with Git 2.23, and is
 The third form, `git checkout -b`, both creates the new branch and checks it out, i.e. makes it current.
 `git checkout` has multiple different use-cases and `git switch` was introduced as a safer option to `git checkout` so that one doesn't accidentally perform one of `git checkout`'s other functions when a branch switch is intended.
 
+We can also create a new branch initially pointing to any commit in the repository:
+```shell
+git branch BRANCH_NAME COMMIT
+```
 
 ## Moving A Branch
 
@@ -174,7 +181,6 @@ git branch -f feature/some-feature feature/some-feature^
 ```
 
 The `-f` (force) bit is required because normally `git branch` is used to create new branches, not modify existing branches.
-
 
 `git branch` cannot be used to move the current branch.
 For this you need `git reset`.
@@ -198,6 +204,9 @@ git branch BRANCH_NAME
 # Create a new branch and switch to it.
 git switch -c BRANCH_NAME  # New way.
 git checkout -b BRANCH_NAME  # Old way.
+
+# Create a new branch in the background pointing to a specific commit.
+git branch BRANCH_NAME COMMIT
 ```
 
 # Merge
@@ -296,6 +305,7 @@ Git seems  to track commits as they move between locations.
 Here is a screenshot from https://learngitbranching.js.org/ the _Rebasing over 9000 times_ level.
 
 ![one rebase done](./images/git/one_rebase_done.jpg)
+_Image provided by [learngitbranching.js.org](https://learngitbranching.js.org/)._
 
 Here we have already rebased `side` from the old `C6` onto `bugFix`, which created `C4'`, `C5'`, and `C6'`.
 The goal is to rebase `another` onto `side` so that we get a fully linear history from `C0` to a newly created `C7'`.
@@ -339,8 +349,10 @@ The operation performed here is to take all commits in the range from the first 
 
 # Reset
 
-Moves a branch backwards along the parent references.
+Moves the current branch backwards along the parent references.
 It's like rewinding time for that branch and resetting it back to an earlier state.
+
+To move non-current branches one can use `git branch -f BRANCH TARGET_COMMIT` instead.
 
 To move the current branch backwards one commit relative to `HEAD`:
 ```shell
@@ -450,6 +462,41 @@ There are multiple ways to create a relative ref, here using `HEAD` as the base:
 		- TODO Verify the above.
 	- Can be given multiple times: `HEAD^^^` means go to the third ancestor.
 - `HEAD~#` (tilde operator): Follow `#` parent links where `#` is an integer.
+	- If no number is given then it defaults to 1, meaning `~` does the same as `^`: goes to the parent.
+
+## Multiple Parents And `^`
+
+Since a commit may have multiple parents we need a way to  specify which parent to chose.
+With `^` this is done by appending a number.
+This number is the index of the wanted parent in the parents list in the commit that `^` is applied to.
+The order of the parents is dictated by the order of arguments passed to `git merge` when the commit with multiple parents was created.
+
+For example, consider a case where a branch was created by merging a feature branch into `main`:
+```shell
+# Currently on main.
+git merge feature/some-feature
+```
+
+The merge commit created from this has two parents.
+The first parent is `HEAD` at the time the command is run, i.e. the commit `main` pointed to.
+The second parent is the commit that the merged branch, `feature/some-feature` in the example, points to.
+If more branches are listed on the `git merge` command line then those are added in order to the parents list.
+
+So in short: `parents` becomes `HEAD`, `MERGED_BRANCH` `[, MERGED_BRANCH...]`
+
+
+## Combined Operators
+
+We can combine `^` and `~` arbitrarily.
+For example, `HEAD~^2~2`means:
+- `HEAD~`: Go to the parent.
+- `HEAD~^2`: Go to the parent and then the second parent.
+- `HEAD~^2~2`: Go to the parent, then the second parent, then the second ancestor.
+
+Given the repository shown in the image below and starting at `main`, the example above will put the working copy at the commit labeled `HEAD`.
+
+![combined_relative_refs](./images/git/combined_relative_refs.jpg)
+_Image provided by [learngitbranching.js.org](https://learngitbranching.js.org/) with annotations added for clarity._
 
 
 #  Modifying An Ancestor Commit
@@ -529,6 +576,36 @@ To detach `HEAD` from the current branch and point it directly to a commit, swit
 git switch HASH
 ```
 
+
+
+# Remotes
+
+A remote is a copy of the same repository stored somewhere else.
+That somewhere else can be another directory on the same machine or another machine.
+To work with remotes you need a way to access that remote, you need its  URL.
+If the remote is on the same machine then the URL is a regular file system path.
+If the remote is on another machine then the URL is often a HTTPs or SSH address, possibly with a user name for authentication.
+
+If a repository already exists on a remote then we  can create a local working copy of that repository with:
+```shell
+git clone URL [DIRECTORY]
+```
+
+If `DIRECTORY` is not specified then a new directory named  after the repository will be created.
+
+`git clone` will create a complete copy of the remote repository including all history.
+
+All remotes are recorded with a name in our local repository.
+The repository from which our working copy was created is by default named `origin`.
+
+We can list the remotes with their names and URLs with:
+```shell
+git remote -v
+```
+
+Each remote may be listed twice, once for fetch (read) operations one once for push (write) operations.
+A fetch downloads new things that have happened on the remote since we cloned  or last fetched.
+A push uploads new things that we have done in our local repository to the remote.
 
 # References
 
