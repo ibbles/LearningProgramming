@@ -607,6 +607,100 @@ Each remote may be listed twice, once for fetch (read) operations one once for p
 A fetch downloads new things that have happened on the remote since we cloned  or last fetched.
 A push uploads new things that we have done in our local repository to the remote.
 
+## Remote Branches
+
+The branches that exists on the remote also have a representation in our local  repository.
+Their named are prefixed with `remotes/REMOTE_NAME/`.
+So if someone else in another working copy created and pushed a branch named `feature/some-feature` to a remote we have named `origin` then that branch will show up in our repository as `remotes/origin/feature/some-feature` after we  do a fetch.
+These branches are not listed with a regular `git branch`.
+To see them we need to pass the `--all` flag:
+```shell
+git branch --all
+```
+
+These branches reflect  the state of the remote repository.
+They are not the actual remote branches, they are just a representation.
+We cannot work directly on these branches.
+
+We can check out these branches, but since they aren't local branches then won't behave as regular branches.
+They can be considered being read-only from our repository, so checking one out will cause our working copy to enter a detached `HEAD` state, and switching to one will require the `--detach` flag.
+
+Instead we should checkout or switch to the local form of the branch name.
+Even though no branch named `feature/some-feature` exists in our repository, if there is such a branch in any of our remotes then checking it out or switching to it will create a local copy of that branch.
+In addition, the local copy will be set up to track the remote branch.
+Tracked branches means that Git will help manage merging of commits that happen to this branch in both the local repository and the remote.
+
+
+## Fetch
+
+`git fetch` is used to fetch, i.e. download, commits  and branches from the remotes that we don't yet have in our repository.
+It also  updates which commit each remote branch points to, in case that has changed on the remote.
+
+```shell
+git fetch
+```
+
+`git fetch` makes our local representation of the repository on the remote match the actual contents of the remote repository.
+
+`git fetch` never modifies anything about the local branches.
+If you have a local copy of a remote branch then `git fetch` may download new commits on that branch that are ahead of your commit and move the remote branch forward to the leaf of those commits, but `git fetch` will not move  the local branch forward through those commits.
+`git fetch` will only update the repository and only the part of the repository that belong to that remote, it will never update any other parts of the repository or the working copy.
+
+To update the local branches to be in sync with the remote branches you would need to merge the remote branch into your local branch:
+```bash
+# When on feature/some-feature, a branch that also exists on the origin remote.
+# Make our local feature/some-feature up-to-date with the same branch on the remote.
+# Thay may result in a merge conflict.
+git merge origin/feature/some-feature
+```
+
+
+## Pull
+
+A pull is, by definition, a combination of a fetch an a merge of the current branch's remote into the local branch.
+```shell
+git pull
+```
+
+Note that only the current branch is updated.
+If there are other branches being collaborated on and your are currently working in, say, `feature/some-feature` but there is also, say, `feature/other-feature` that you worked on before then a `git pull` will only merge commits from the remote into the current `feature/some-feature`.
+The local `feature/other-feature` will remain left behind where it was when you last switched away from it.
+This means that when you switch to that branch again it will not be up to date with the remote branch.
+If you intend to resume work on that branch then you should do a new `git pull` or manually merge the corresponding remote branch before starting you work.
+
+
+## Push
+ 
+ A push is used to upload your work to the remote, to publish it to other people.
+ ```shell
+ git push
+```
+
+After a `git push` in one repository, all other repositories using the same remote will get those changes when `git fetch` is run in those repositories.
+
+
+## Remotes Commands
+
+```shell
+# Create a new working copy from an already existing repository.
+git clone URL [DIRECTORY]
+
+# List remotes.
+git remote -v
+
+# List branches including those fetched from a remote.
+git branch --all
+
+# Update the local representation of the contents of the remotes.
+git fetch
+
+# Do a fetch and then merge the remote branch into the local branch for the current branch.
+git pull
+
+# Manually merge a remote branch into the local branch.
+git merge origin/feature/some-feature
+```
+
 # References
 
 - 1: [_Learn Git Branching_ @ learngitbranching.js.org](https://learngitbranching.js.org/)
