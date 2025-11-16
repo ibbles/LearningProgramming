@@ -655,6 +655,23 @@ git merge origin/feature/some-feature
 ```
 
 
+We can chose to only fetch specific branches from the remote:
+```shell
+git fetch origin feature/some-feature
+```
+
+We can use a colon refspec to control the branch the fetched commits are put into:
+```shell
+git fetch origin feature/some-feature:feature/another-feature
+```
+If there is no local branch with that name then it is created.
+
+If we pass "nothing" for the source then a new branch is created with the name of the destination:
+```shell
+git fetch origin :feature/branch-to-create
+```
+
+
 ## Pull
 
 A pull is, by definition, a combination of a fetch an a merge of the current branch's remote into the local branch.
@@ -668,6 +685,11 @@ The local `feature/other-feature` will remain left behind where it was when you 
 This means that when you switch to that branch again it will not be up to date with the remote branch.
 If you intend to resume work on that branch then you should do a new `git pull` or manually merge the corresponding remote branch before starting you work.
 
+If you want to do a rebase instead of a merge then pass the `--rebase` flag:
+```shell
+git pull --rebase
+```
+
 
 ## Push
  
@@ -678,6 +700,73 @@ If you intend to resume work on that branch then you should do a new `git pull` 
 
 After a `git push` in one repository, all other repositories using the same remote will get those changes when `git fetch` is run in those repositories.
 
+By default Git will push the current branch to its tracked branch on the remote.
+We  can also provide this information explicitly:
+```shell
+git push REMOTE BRANCH
+```
+
+An example:
+```shell
+git push origin feature/some-feature
+```
+This pushes the new commits on the local branch `feature/some-feature` to the corresponding branch in the remote named `origin`.
+This form does not consider the current branch in the working copy.
+
+We can specify different source and destination branches.
+The following will push the commits in `feature/some-feature` to `feature/another-feature` on the remote:
+```shell
+git push origin feature/some-feature:feature/another-feature
+```
+
+If the destination branch doesn't exist on the remote then it will be created.
+
+We can pass "nothing" for the source, i.e. the thing before the `:`.
+We do this by starting the argument with a `:`:
+```shell
+git push origin :feature/another-feature
+```
+This will turn `features/another-feature` on the remote into "nothing", i .e. delete it.
+
+It seems `git push` can do a bunch of freaky stuff that can put our repositories in weird misaligned states.
+
+If we don't have a branch with tracking checked out, for example if we are in a detached `HEAD` state or if we have created a local branch that haven't yet been created on the remote then `git push` will fail.
+
+
+## Branch Remote Tracking
+
+There can be a relationship between a local branch and a remote branch.
+A relationship that states that if a `git pull` is done while on the local branch then changes from the remote branch should be incorporated into  the local branch.
+A relationship that states that if a `git push` is done while on the local branch(\*) then changes from the local branch should be incorporated into the remote branch.
+
+- \*: There are configuration settings for how `git pull` should behave. For more details se the `CONFIGURATION` > `push.default` documentation in `git help push`.
+
+This relationship is called tracking.
+We say that the local branch is tracking the remote branch.
+You can see which remote branch each local branch is tracking with
+```shell
+git branch -vv
+```
+
+When a repository is cloned a local version of the default branch is created and set up to track the remote branch.
+
+When a remote branch is checked out for the first time the local branch that is created is set up to track the remote branch.
+```shell
+# feature/some-feature exists in the remote but not as a local branch
+# This command will create the local branch and make it track the remote branch.
+git checkout feature/some-feature
+```
+
+We can give the local branch a different name, if we wish.
+```shell
+# Create a new branch named feature/another-name and make it track feature/some-feature on the remote.
+git checkout -b feature/another-name origin/feature/some-feature
+```
+
+We can also use the `-u` flag, for "upstream", to set the tracked remote  branch for a local branch.
+```shell
+git branch -u origin/feature/some-feature feature/another-name
+```
 
 ## Remotes Commands
 
