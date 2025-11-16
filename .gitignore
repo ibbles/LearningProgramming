@@ -3,3 +3,5 @@
 .theia
 compile_commands.json
 .tangent
+*.kra
+*.jpg~
