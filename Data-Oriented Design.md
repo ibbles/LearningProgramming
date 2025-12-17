@@ -1,4 +1,3 @@
-
 Data-oriented design is the act of designing and developing software in a way that makes the data, data flow, and operations performed on the data, first-class citizens.
 
 Data-oriented design is the result of the observation that the computational performance characteristics of computers changed a lot in the 2005 - 2010 time-frame along with a desire to keep improving the runtime performance of our programs.
@@ -27,6 +26,11 @@ The goal is to not let high-level concepts of the problem domain restrict the im
 In data-oriented design we consider the data we actually have and the operations we know we need to perform.
 A particular problem is solved as directly as possible, rather than planning for all eventualities.
 It is better for a piece of code to be replaceable than to be extendable, this means it can be simpler.
+Holding on to the past hinders flexibility.
+Future-proofing is difficult since we cannot see the future.
+By not tying the software architecture to the business facts we make the software easier to change when the business facts inevitable change.
+We avoid coupling the pieces making up the implementation to the problem domain.
+Data-oriented design handles change well since data and transformations can be coupled and decoupled at will.
 
 Operations should generally no be associated directly with individual elements of bulk data.
 Instead the bulk data should be considered as a whole in each transformation.
@@ -37,6 +41,15 @@ Data structures should not live inside objects, object data should live inside d
 This simplifies data manipulation
 
 There is more to data than its structure.
+
+# The Folly Of Generic Solutions
+
+Data-oriented design is work-flow specific.
+Data-oriented design is a process, not a data structure or a library.
+Data usage patterns are not generic.
+While a data-parallel for-loop over a linear array is a fundamental building-block, in a particular part of a particular software there may be better, more specific, approaches than a data-parallel for-loop.
+For example, if we have application-specific knowledge about our data then we can chose, or even design, a custom sorting algorithm that performs better than a generic library-provided sort implementation, or we can bake additional work directly into the sorting process.
+
 
 # Principles
 
