@@ -41,6 +41,9 @@ Data structures should not live inside objects, object data should live inside d
 This simplifies data manipulation
 
 There is more to data than its structure.
+(Such as?)
+
+Move away from a web of connected complex objects to a simpler model of arrays.
 
 # The Folly Of Generic Solutions
 
@@ -49,6 +52,55 @@ Data-oriented design is a process, not a data structure or a library.
 Data usage patterns are not generic.
 While a data-parallel for-loop over a linear array is a fundamental building-block, in a particular part of a particular software there may be better, more specific, approaches than a data-parallel for-loop.
 For example, if we have application-specific knowledge about our data then we can chose, or even design, a custom sorting algorithm that performs better than a generic library-provided sort implementation, or we can bake additional work directly into the sorting process.
+
+
+# Properties Of Data
+
+Things to be aware of:
+- What is tying your data together? Is it a concept or implied meaning?
+- Is your data layout defined by a single interpretation from a single point of view?
+- Think about how the data could be reinterpreted and cut along those lines.
+- What is it about the data that makes it uniquely important?
+- What streams of data exists?
+- Who or what consumes each stream of data?
+- What are the access patterns to the data?
+- For each memory transfer, how much of the fetched data is used?
+- For each memory transfer, how many compute operations are performed per element?
+	- This describe the compute / bandwidth requirements of the application.
+- For each memory transfer, how much of the fetch data is modified?
+- How often is each piece of data read?
+- Is there any implicit information in the data, that is not stored explicitly?
+
+All data has some level of complexity.
+A single array has a low degree of complexity.
+Multiple parallel arrays has some additional complexity, but not much.
+Arrays that contain references to elements in other arrays has a higher complexity.
+Arrays that contains sub-arrays increases complexity further.
+Sparse arrays increases the complexity further still.
+
+Data can reference other data.
+This is often done by having one piece of data containing a pointer or reference to some other piece of data.
+A reference can also take the form of an index into an array.
+A reference can also take the form of an ID that is used to look up the location of the referenced data.
+The referenced data must exist before we can create a reference to it.
+Otherwise it doesn't yet have an address to point to, an index in an array, or an ID in a look-up table.
+This can be problematic if we have circular reference chains, or if we need a reference to an object that will be created in the future.
+One way around this is to separate the identity of each object from the data that describe the object.
+We can say beforehand that a particular object will exist in the future without being ready to actually create it.
+The mere declaration that an object will exist at some point in the future is sufficient to give it an ID and thus a way to reference it.
+
+
+# Types Of Operations
+
+Most operations performed by a functions is one of:
+- insert
+- update
+- delete
+- query
+
+By understanding the characteristics of our data and our operations we can chose implementations of both data storage and algorithms that are efficient in some way that we care about.
+
+By keeping the data storage simple and the cleverness in the operations we do not need to maintain a deep understanding of the data format to use it well.
 
 
 # Principles
