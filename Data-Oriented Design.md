@@ -6,7 +6,7 @@ All of these factors influence how high-performance software should be written.
 
 The two main building blocks in a data-oriented design is data and transformations performed on that data.
 Data-oriented design is not just about reducing cache-misses.
-Data-oriented design is not just about the schema for how data is stored in memory.
+Data-oriented design is not just about the schema for how data is stored in memory [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=4713).
 Data-oriented design is not just about how data is transformed.
 
 A core tenet of data-oriented design is to not hide the data behind abstractions, and instead operate directly on it.
@@ -16,6 +16,11 @@ A data element's location in memory and lifetime is just as important as it's ty
 Avoid creating monolithic classes that entangle data, where data is stored, and what it's lifetime is across multiple pieces of data for which these things may not actually be the same.
 
 Avoid using frameworks that have been designed with generality in mind, at the expense of the option to craft custom solutions for custom situations.
+
+Data-oriented design means that we are designing our architectures with a major focus on data layout, not that we apply a prescribed data layout to our data [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=4713).
+Let the access patterns choose the layout, not the other way around.
+The access patterns are determined by the problem being solved and the solution, in an abstract sense, employed to solve that problem.
+Abstractions over the data storage makes it easier to switch back and forth between different storage layouts, which is required for efficient experimentation.
 
 Data is not the problem domain.
 A common technique in software development is to bring the problem domain into the types of the program.
@@ -44,11 +49,42 @@ There is more to data than its structure.
 (Such as?)
 
 Move away from a web of connected complex objects to a simpler model of arrays.
+At least when operating at a fine granularity, i.e. when there are many similar objects [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=4818).
+Object-oriented programming works well to express at a coarser granularity.
+For example, have an OOP `ParticleSystem` that contains internal DOD particles, maybe in a SOA storage format.
+Use OOP at the API layer, use DOD at the data storage and processing layer.
+OOP is the interface, DOD is the implementation.
+OOP is the shell, DOD is the engine.
+
+
+# The Data-Oriented Mindset
+
+Data-oriented design is not an implementation instruction but a mindset [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=1916), [(3](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=4713).
+- Model a world of data transformation.
+	- Code is a pipeline that transforms data from one state to another.
+	- We don't (really) even care about which data belong together in an object, for each transformation we only care about the data needed to perform that specific transformation.
+- Operate directly on batches of data.
+	- Instead of individual objects being in control, it is now loops that work in bulk.
+	- "Managers" or "systems" are responsible for behavior.
+	- Processors thrive on simple predictable work, which means long straight runs on continuous data.
+- Expose data, centralize behavior.
+	- Data is the most important thing, don't hide it.
+	- Behavior implementations should see all the data so that it can process it in the best way possible.
+	- Make sure you understand its shape, size, and access patterns.
+	- Design for the hardware, not a metaphor of the problem.
+	- This means that you should be aware of the capabilities and limitations of the hardware.
+- Plat for today.
+	- Design for the problem you actually have.
+	- Don't add complexity to solve that problem that doesn't exist.
+	- Once the problem do change, which it inevitable will, by not adding an abstraction that went in the wrong direction we made it easier to adapt to that change.
+
+Focus on the data's journey.
+
 
 # The Folly Of Generic Solutions
 
 Data-oriented design is work-flow specific.
-Data-oriented design is a process, not a data structure or a library.
+Data-oriented design is a process, not a data structure or a library [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=4713).
 Data usage patterns are not generic.
 While a data-parallel for-loop over a linear array is a fundamental building-block, in a particular part of a particular software there may be better, more specific, approaches than a data-parallel for-loop.
 For example, if we have application-specific knowledge about our data then we can chose, or even design, a custom sorting algorithm that performs better than a generic library-provided sort implementation, or we can bake additional work directly into the sorting process.
@@ -110,7 +146,79 @@ There are the principles from [_Data-Oriented Design_ by Richard Fabian](https:/
 - 1: Data is not the problem domain.
 - 2: Data is the type, frequency, quantity, shape, and probability.
 
+
+# Object References
+
+There are multiple ways to reference another object [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=2218).
+
+- Pointer .
+	- The referencer has a pointer to the referencee.
+	- This works well in the classical object-oriented, single-allocation paradigm where objects are allocated individually on the heap and stay there until the end of their lifetime.
+	- Require address stability of the referencee, i.e. it may not move.
+	- Don't use pointers to objects stored in an `std::vector` unless you can guarantee that the container won't be reallocated or reordered.
+	- Don't use pointers to objects stored in an array unless you can guarantee that the array won't be moved along with the outer objects, and that the array won't be reordered.
+- Index.
+	- Used when many objects of the same type are allocated together in a container.
+	- In this case we (typically) cannot use a pointer because the container may be reallocated.
+	- Don't use indices to objects stored in a container that can be reordered.
+	- A technique to maintain index stability even when other elements in the same container are destroyed is to leave a tombstone at the index of the destroyed element. The tombstone can be a member on the element (Such as an `is_alive` flag.), a sentinel byte pattern ( Such as `memset(0)`.), a sentinel value (Such as a default-constructed object.), or a wrapper type to signal absence / presence of a value (Such as `std::optional`.). When creating a new element re-use a tombstone index if available rather than resizing the container, for example using a free list.
+- ID.
+	- An ID identifies an object based on its identity rather than its location.
+	- To get at the data we need to find the location, which often involves some kind of look-up.
+
+# Implementation Suggestions
+
+Here are a few possible things to consider doing when designing and implementing a program [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=2109).
+
+## Avoid Individual Heap Allocations
+
+Instead store each type in its own contiguous container.
+Avoid a single large polymorphic container, instead have many smaller container with concrete types.
+
+
+## Encode Implicit Data In Containers
+
+We can save some memory by implicitly encoding information in which container an entity is stored in [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=3610).
+For example, instead of storing type information as an `enum` in each entity we can have one container for each type.
+For example, we can have a `fireParticles` container and a `smokeParticles` container, both containing `Particle` entities.
+
+
+
+## Flatten The Inheritance Hierarchy
+
+## Decouple Data From Logic
+
+
+## Structure-Of-Arrays
+
+Structure-of-arrays means that we have a `struct` that contains a bunch of arrays [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=3804) that contains a collection of entities of the same type.
+This is an alternative to the more common array-of-structures, where we have a single array that contains many instances of a `struct` type.
+In Structure-of-arrays each member of all entities of a particular type are stored together in their own memory block.
+```cpp
+struct Particles
+{
+	std::vector<Vector3> positions;
+	std::vector<Vector3> velocities;
+	std::vector<Vector3> accelerations;
+	std::vector<float> scale;
+	std::vector<float> opacity;
+	std::vector<float> rotation;
+};
+```
+
+There is no longer a memory area that contains all the data for an entity [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=3897).
+Instead all the data for an entity live at a particular index in these containers.
+All containers have the same size and grow and shrink together.
+
+An advantage of structure-of-arrays is that when accessing a subset of the members we don't pollute the cache with the other members, sometimes called surgical field loading [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=3975).
+Also, we reduce the amount of memory wasted to padding since the compiler won't need to insert any between elements of an array that same way it may need to do between members of a `struct` due to alignment requirements [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=3907).
+Also, we make it easier to add [[SIMD]] acceleration [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=3987).
+
+
+
 # References
 
 - 1: [_Data-Oriented Design_ by Richard Fabian, 2018](https://www.dataorienteddesign.com/dodbook/dodmain.html)
 - 2: [_Data-Oriented Programming_ by Yehonathan Sharvit, 2022](https://www.manning.com/books/data-oriented-programming)
+- 3: [_More Speed & Simplicity: Practical Data-Oriented Design in C++ - Vittorio Romeo - CppCon 2025_ Vittorio Romeo, CppCon @ youtube.com 2025](https://www.youtube.com/watch?v=SzjJfKHygaQ)
+
