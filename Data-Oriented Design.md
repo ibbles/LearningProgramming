@@ -166,9 +166,55 @@ There are multiple ways to reference another object [(3)](https://youtu.be/SzjJf
 	- An ID identifies an object based on its identity rather than its location.
 	- To get at the data we need to find the location, which often involves some kind of look-up.
 
+
+# Effective Cache Utilization
+
+A possible goal when designing with data in mind is to make effective use of the CPU's cache.
+An access is fast if it can be serviced from the cache.
+An access is slow if it must be serviced from main memory.
+Memory is accessed in chunks called cache lines.
+A cache line is often 64 B on a desktop machine.
+A guess for the cache line size can be had a compile time with [`std::hardware_constructive_interference_size` and `std::hardware_destructive_interference_size`](https://en.cppreference.com/w/cpp/thread/hardware_destructive_interference_size.html) in C++.
+
+In short, as many memory accesses as possible should be serviced from the cache for best performance.
+One way cache space is wasted is when pieces of data that are not used together are stored close to each other in memory.
+When the first piece is accessed the other piece will get pulled in as well if they lie on the same cache line, which is wasted cache space and memory bandwidth since we are only going to use the first piece.
+It would be better if the entire cache line contained useful data.
+By structuring our data carefully in memory we can minimize the amount of wasted cache line space.
+
+One strategy for data organization intended for effective cache utilization is to store each similar piece of data for many objects together, and to do batch operations on all objects at once.
+For example, by storing the positions of a bunch of particles in an array when we go update those positions and read the first particle's position we will populate the cache with the neighboring particles positions' as well.
+Even better, since the update will walk linearly through the positions array the hardware memory prefetcher will quickly discover the pattern and start pulling in upcoming particle positions for us ahead of time.
+For more on this, see the _structure-of-arrays_ chapter.
+
+
+# Types Of Data Storage
+
+This chapter summarizes a few ways of storing data.
+Some of these have dedicated chapters or sections.
+
+- Array-of-structs.
+- Struct-of-arrays.
+- Three-of-objects.
+- Network-of-objects.
+
+
+# Types Of Data Processing
+
+This chapter summarizes a few ways of processing data.
+Some of these have dedicated chapters or sections.
+
+- Global storage.
+	- Each phase of the computation reads from and writes to a global data store.
+- Stream / pipeline.
+	- Data is generated and transformed through a pipeline of transformers / filters / ....
+- Events.
+	- Events trigger the generation of data, which may trigger other events for processing of that data.
+
+
 # Implementation Suggestions
 
-Here are a few possible things to consider doing when designing and implementing a program [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=2109).
+Here are a few things to consider doing when designing and implementing a program [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=2109).
 
 ## Avoid Individual Heap Allocations
 
@@ -187,6 +233,35 @@ For example, we can have a `fireParticles` container and a `smokeParticles` cont
 ## Flatten The Inheritance Hierarchy
 
 ## Decouple Data From Logic
+
+## Dirty Sets Instead Of Dirty Flags
+
+It is common to have data whose value depend on the values of other data.
+For example, the sum of a container of values depend on the values in the container, and the transformation of an object in a transformation hierarchy depends on the transformations of all parents in that hierarchy.
+If the dependent value is expensive to compute we may not want to do it eagerly since the value we spend effort computing may never be used before it is recalculated.
+One way to handle this is to have a dirty flag.
+Any change that invalidates the dependent value sets the dirty flag and once the dependent value is actually needed we check the dirty flag and recalculate if necessary.
+A drawback of this approach is that we pay for a branch and possibly a misprediction every time the value is needed [(1)](https://www.dataorienteddesign.com/dodbook/node9.html#SECTION00970000000000000000).
+If reading the flag causes a cache miss then the cost of reading the flag and acting upon it may be greater than the cost of computing the value.
+An alternative to a dirty flag is a dirty set [(1)](https://www.dataorienteddesign.com/dodbook/node9.html#SECTION00970000000000000000).
+This technique is applicable when there are well-defined points within the application life cycle where we transition from a write-phase where the dependee data may be written to and a read-phase where the dependent data is read from.
+Instead of doing dirty tracking as mutable state stored within each and every object we have a container containing the dirty objects.
+As we transition from the write-phase to the read-phase we do a single pass over that container and update the dependent data on all dirty objects.
+This has a few advantages:
+- Batch calculation.
+	- When the dependent data is computed we only touch objects that are dirty and should be recalculated.
+	- We only do that particular calculation repeatedly, the calculation is not mixed in with random calculations spread out all over our application.
+	- This makes better use of the instruction cache.
+- Optimal reads.
+	- When we need to read the dependent data we know that the value is up-to-date.
+	- No need to check any flag, no risk for an extra cache miss when reading it, and no risk of a branch misprediction.
+	- No risk of uneven processing times in the read-phase of the application.
+- Clearer performance analysis.
+	- By doing the value update in a single places it becomes easier to quantify it during profiling.
+	- The cost of the update is not scattered all over the read-phase of the application, making it impossible to measure and misconstruing the actual cost of the read-phase of the work.
+
+A drawback, as mentioned above, is that it requires strict checkpoints in the application that separates the write-phases from the read-phases.
+We can no longer willy-nilly read and write the dependent data like we can with a developer-friendly dirty flag.
 
 
 ## Structure-Of-Arrays
