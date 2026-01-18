@@ -108,6 +108,23 @@ It also makes it possible to verify or correct any mistakes done in reasoning or
 - 5: Implement solution.
 - 6: Verify solution.
 
+
+# Enabling Compiler Optimizations
+
+The compiler's optimization phase does a number of transformations on the program in order to transform it from a naive representation of the code we wrote to something equivalent that will run faster [(1)](https://www.dataorienteddesign.com/dodbook/node10.html).
+There are limitations to what transformations a compiler is allowed to do, it may only make changes that does not change the semantics of the original code, this is called the _as-if_ rule.
+It is common that the code we write expresses limitations that we actually don't care about.
+These are called performance pessimisations.
+Examples of performance pessimisations are iterating through elements of a memory area in the wrong order and using `std::move` to return from a function that could otherwise have used return value optimization.
+
+## Reducing Order Dependence
+
+Static single assignment is a form of code representation where all values are read-only.
+Compiler typically do this transformation as an intermediate representation of your code.
+We can write our code in this form ourselves by avoiding doing assignments as much as possible.
+Not sure if this leads to any performance improvements though.
+
+
 # Resources
 
 - 1: [_Data-Oriented Design_ > _Optimizations_ by Richard Fabian, 2018](https://www.dataorienteddesign.com/dodbook/node9.html#SECTION00930000000000000000)
