@@ -296,4 +296,4 @@ Also, we make it easier to add [[SIMD]] acceleration [(3)](https://youtu.be/SzjJ
 - 1: [_Data-Oriented Design_ by Richard Fabian, 2018](https://www.dataorienteddesign.com/dodbook/dodmain.html)
 - 2: [_Data-Oriented Programming_ by Yehonathan Sharvit, 2022](https://www.manning.com/books/data-oriented-programming)
 - 3: [_More Speed & Simplicity: Practical Data-Oriented Design in C++ - Vittorio Romeo - CppCon 2025_ Vittorio Romeo, CppCon @ youtube.com 2025](https://www.youtube.com/watch?v=SzjJfKHygaQ)
-
+- 4: [_Andrew Kelley: A Practical Guide to Applying Data Oriented Design (DoD)_ by Andrew Kelley, ChimiChanga @ youtube.com 2024](https://www.youtube.com/watch?v=IroPQ150F6c)
