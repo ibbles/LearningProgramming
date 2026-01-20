@@ -210,6 +210,44 @@ If two systems previously only used separate parts of the objects, with the intr
 # Help The Branch Predictor
 
 Make sure a branch is consistently true or false for a large contiguous chunk of times.
+
+
+# Move correctness guarantees from runtime checks into data layout rules
+
+Use the type system to express things like alignment and buffer size multiples, rather than runtime checks [(5)](https://www.dataorienteddesign.com/dodbook/node10.html#SECTION001090000000000000000).
+This gives the compiler more opportunities for optimization and cuts down on the amount of prologue / epilogue code needed around auto-vectorized SIMD loops.
+
+```cpp
+// f16 is a float type that is only allowed in buffers that are 16-byte aligned.
+// Each individual float element in the buffer is not necessarily aligned, but we,
+// as programmers, guarantee that any pointer we pass as an argument to a funtion
+// will be 16-byte aligned.
+typedef float f16 __attribute__((aligned(16)));
+
+void Amplify(f16* a, float mult, int count)
+{
+	count &= -4;
+	for (int i = 0; i < count; ++i)
+	{
+		a[i] *= mult;
+	}
+}
+```
+
+
+By:
+- Allocating aligned buffers.
+- Rounding counts upfront.
+- Expressing guarantees in the type system.
+
+You get:
+- Simpler loops.
+- Fewer instructions.
+- Better I-cache density.
+- More predictable performance.
+
+
+
 # References
 
 - 1: [_What Every Programmer Should Know About Memory_ by Ulrich Drepper @ freebsd.org 2007](https://people.freebsd.org/~lstewart/articles/cpumemory.pdf)

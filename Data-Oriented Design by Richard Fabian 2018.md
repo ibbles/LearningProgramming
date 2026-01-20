@@ -131,6 +131,39 @@ But sorting also comes with a cost, so make sure it is worth it. Measure.
 
 Branching is expensive not because the jump is expensive, but because branch misprediction is expensive.
 A vtable pointer, i.e. a virtual function call, is kinda like a branch in that it can go to difference locations.
+The CPU will be executing one of several possible sequences of instructions based on a memory load.
+
+
+## Don't Get Evicted
+
+When writing cache-aware code you need to be aware not only of the code you are writing but also of all code that may be executing in parallel on other cores.
+This is because multiple cores share some of the caches.
+We cannot be sure that any data we read into the cache will remain there.
+To reduce the frequency of such "external evictions", keep both code and data small and process in bursts.
+Work that is done in bursts have a higher likelihood of making reasonable progress before getting evicted.
+
+One way to keep code small is to make guarantees to the compiler.
+If the compiler can know properties of the data being processed then it doesn't need to add extra checks and handle special cases that never happen.
+Things that should be guaranteed:
+- Data is suitably aligned.
+- Data is processed in power-of-two chunks.
+
+It is better to have aligned buffers than to have a scalar runway loop at the top of the function to get to an aligned address.
+(
+Is this still a thing now that unaligned SIMD loads are the same speed as aligned SIMD loads?
+Are they the same speed, or just "fast enough"?
+)
+It is better to have some "dead elements" at the end of the array than to have a scalar cleanup-loop for the last handful of elements.
+
+
+## Auto-Vectorization
+
+The goal of auto-vectorization is to make your scalar code faster by doing multiple operations per instructions using SIMD.
+It is done by the compiler if the optimization level is set high enough.
+You need to format your code so that the compiler can prove that a bunch of assumptions hold.
+If those assumptions cannot be proven then the code will either remain scalar or extra code will be added to handle special cases.
+
+
 
 # References
 
