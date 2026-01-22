@@ -209,7 +209,7 @@ If two systems previously only used separate parts of the objects, with the intr
 
 # Help The Branch Predictor
 
-Make sure a branch is consistently true or false for a large contiguous chunk of times.
+Make sure a branch is consistently true or false for a large contiguous chunk of iterations [(6)](https://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-faster-than-processing-an-unsorted-array).
 
 
 # Move correctness guarantees from runtime checks into data layout rules
@@ -234,6 +234,18 @@ void Amplify(f16* a, float mult, int count)
 }
 ```
 
+You can also use [`std::assume_aligned`](https://en.cppreference.com/w/cpp/memory/assume_aligned.html):
+```cpp
+void Amplify(float* a, float mult, int count)
+{
+	a = std::assume_aligned<16>(a);
+	count &= -4;
+	for (int i = 0; i < count; ++i)
+	{
+		a[i] *= mult;
+	}
+}
+```
 
 By:
 - Allocating aligned buffers.
@@ -247,6 +259,73 @@ You get:
 - More predictable performance.
 
 
+# Help The Auto Vectorizer
+
+Make sure the compiler can proves that buffers and iteration counts are aligned and the iteration count is known before the loop starts.
+
+Use `buffer = std::assume_aligned<16>(buffer);` to tell the compiler that a buffer is aligned to 16 bytes.
+Use `count &= -4` to tell the compiler that a count is a multiple of 4.
+Use `alignas` to tell the compiler that a type or variable should be aligned.
+
+Branching constructs such as `if (count % 4) return;` does seem to be as reliable as `count &= 4` to enable auto vectorization, though this is very much compiler version dependent.
+GCC 13.2 (released 2023) is more picky with which variant of the `Amply` function above it vectorizes, while GCC 15.2 (released 2025) is more lenient and vectorizes more variants.
+As always, measure and inspect your particular code and compiler combination.
+
+Do not modify the iteration variable or do any `break`, `continue`, or `return` from within the loop body.
+Also be wary of any loop that calls a function, that may prevent auto vectorization.
+Inlined and `constexpr`/`consteval` functions are less prone to breaking auto vectorization.
+
+The auto vectorizer is pretty good at handling branches within the loop body, but avoid conditional writes to memory.
+The compiler cannot emit a SIMD memory store instruction if there is a possibility that some lanes in the SIMD registry should not be stored [(5)](https://www.dataorienteddesign.com/dodbook/node10.html).
+There is no conditional store instruction.
+(
+What does Richard Fabian mean here?
+There is `VPMASKMOV` that can write a subset of elements from a SIMD register to memory.
+Though masked writes was improved quite a bit with AVX-512 regarding cache behavior, perhaps Richard is talking about pre AVX-512 code.
+)
+
+Some use `typedef float f16 __attribute__((aligned(16)));` to create a `float`-type to which a pointer must always be 16-byte aligned.
+This syntax is weird to me.
+Or rather it doesn't only say that a buffer of elements must be 16-bytes aligned but that _all_ elements of the buffer must be 16-bytes aligned.
+Though that's not how the compiler interprets a pointer to an `f16`, so I guess it's fine.
+But don't try to create an array of `f16`s, that won't work since in that case the compiler gets a contradiction between the type's size and alignment that it cannot satisfy, resulting in a compiler error:
+```cpp
+typedef float f16 __attribute__((aligned(16)));
+f16 buffer[16];
+```
+
+From GCC:
+```
+error: alignment of array elements is greater than element size
+   11 |     f16 buffer[16];
+      |                  ^
+```
+
+From Clang:
+```
+error: size of array element of type 'f16' (aka 'float') (4 bytes) isn't a multiple of its alignment (16 bytes)
+    7 | f16 buffer[16];
+      |           ^
+```
+
+How the compiler can allow pointer arithmetic under such conditions is beyond me.
+
+Compile with `-ftree-vectorize -fopt-info-vec-missed -fopt-info-vec` to GCC to make it vectorize more and to learn where auto vectorization failed and why.
+
+
+# Keep Assembly Code Small
+
+This is good because it make it possible to keep a larger fraction of the program in the instruction cache and lower cache levels, and leaves more room for other data.
+
+One way to reduce code size in auto vectorized code is to make it possible for the compiler to prove that buffers are aligned and that the number of elements in the buffers is a multiple of the SIMD width so that no scalar tail loop need to be generated.
+For concrete tips on this see _Help The Auto Vectorizer_ section in this chapter.
+
+I don't think the buffer alignment bit is as important anymore, compiler seem to emit unaligned loads regardless.
+Though in [_Data-Oriented Design_ > _Help The Compiler_ > _Auto Vectorization_](https://www.dataorienteddesign.com/dodbook/node10.html#SECTION0010110000000000000000) Richard Fabian is very clear in that fixing up the alignment of pointers can improve performance dramatically.
+Not sure how.
+
+Code size effects are difficult to demonstrate in micro benchmarks since they, by definition, are micro in usually fit in cache.
+
 
 # References
 
@@ -255,3 +334,4 @@ You get:
 - 3: [_Handles are the better pointers_ by Andre Weissflog @ flooh.gitbug.io 2018](https://floooh.github.io/2018/06/17/handles-vs-pointers.html)
 - 4: [_Data-Oriented Design_ > _Existential Processing_ by Richard Fabian, 2018]([https://www.dataorienteddesign.com/dodbook](https://www.dataorienteddesign.com/dodbook/node4.html))
 - 5: [_Data-Oriented Design_ > _Helping the Compiler_ by Richard Fabian, 2018](https://www.dataorienteddesign.com/dodbook/node10.html)
+- 6: [_Why is processing a sorted array faster than processing an unsorted array?_ by GManNickG, Mysticial @ stackoverflow.com 2012](https://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-faster-than-processing-an-unsorted-array)
