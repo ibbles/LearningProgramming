@@ -62,14 +62,17 @@ Use `yy` instead of `dd` to copy lines instead of deleting.
 - `r`: Reaplce the current character with the next charater you type.
 - `R`: Enter replace (overwrite) mode.
 
-# Copying (Yanking) Text
 
+# Copying (Yanking) Text
 
 - `y`: Copy selected text. See _Visual Mode_ (`V`).
 - `Y`: Copy from the cursor to the end of the current line.
 - `y$`: Copy from the cursor to the end of the current line.
 - `yy`: Copy the current line.
 - `#yy` where `#` is the number of lines to copy.
+- `"+y`: Copy to system clipboard.
+    - I don't know what `"+` actually means. Investigate.
+    - Does the `"+` prefix work with the other copy commands as well?
 
 To copy a range of complete lines with visual mode:
 - Shift+V to enter visual mode and start a selection on the current line.
