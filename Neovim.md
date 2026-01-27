@@ -6,9 +6,11 @@ Single character / line: `h`, `j`, `k`, `l`
 - `W`: Forward one white-space separated word.
 - `B`: Backward one white-space separated word.
 
+- `fX` where `X` is any character: Move forward to the closest `X` on the same line.
+- `;`: Repeat the prior `fX` where `X` is any character, i.e. step forward to the next `X` on the same line.
 
 - `#gg` where `#` is a number: Go to line.
-- `:#` where `$` is a number: Also go to line number.
+- `:#` where `#` is a number: Also go to line number.
 - `gg`: Go to first line.
 - `G`: Go to last line.
 - `H`: Go to top of screen.
@@ -19,7 +21,7 @@ Single character / line: `h`, `j`, `k`, `l`
 - `{`/`}`: Move between paragraphs, i.e. empty lines.
 
 -`ma`: Create a file local mark named `a` at the current location.
-    - Not sure what names are valid.
+    - Not sure what names are valid. Only single-character? Any printable character?
 - `'a` / `\``: Jump to mark, I assume.
     - Only within the current file.
 - `mA`: Create a global mark named `A` at the current location.
@@ -94,6 +96,7 @@ Visual mode is used to select text, for example to copy it.
 
 Use regular cursor navigation to position the end of the selection.
 
+
 # Paragraph Management
 
 - `gqq`: Wrap a long line.
@@ -111,6 +114,16 @@ Open a file in a buffer in a new tab with `:tabe <PATH>`.
 Tabcompletion works.
 
 Switch between buffers with `gt` and `gT`.
+I haven't had much success with this, typing `gt` does nothing.
+(
+I opened three files with `neovim file1 file2 file3`.
+Made a split with `:split`.
+Switched to the other window with `CTRL+w`.
+Typed `gt` to switch from `file1`.
+Nothing happened.
+)
+Another way to switch buffers is with `:buffers` to list the buffers and then `:b #` where `#` is a buffer number.
+
 
 
 # Commands
@@ -162,7 +175,22 @@ Search backwards, perhaps?
     - For example, `dfw` would delete everything up to and including the letter `w`.
 
 
-Search can be used to 
+# Windows / Panes / Tabs
+
+[_VIM USER MANUAL_ > _Splitting windows_ by  Bram Moolenaar @ neovim.io](https://neovim.io/doc/user/usr_08.html#usr_08.txt).
+
+A window is split with `:split`, which will split horizontally, i.e. one window above the other.
+Pass a parametero to `:spit` to open that file, e.g. `:split my_file`.
+To open a window without any file use `:new`.
+Pass a prefix number argument to set the height of the new window, e.g, `:50split my_file` to create a window 50 lines tall.
+
+Switch between windows with `CTRL+w w` or `CTRL+w CTRL+w`.
+Close a window with `:close`.
+Close all other windows with `:only`.
+
+Change the size of a window either by dragging its status line with with `CTRL+w +` (CTRL+SHIFT+= on a US keyboard) and `CTRL+w -`.
+Prefix with a number to change by that many lines, e.g. `50CTRL+w +` to increase the window by 50 lines.
+Set a specific number of lines with `#CTRL+w _` where `#` is a number.
 
 
 # Text Objects
