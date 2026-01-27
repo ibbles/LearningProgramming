@@ -310,8 +310,11 @@ error: size of array element of type 'f16' (aka 'float') (4 bytes) isn't a multi
 
 How the compiler can allow pointer arithmetic under such conditions is beyond me.
 
+Don't have aliasing pointers / references, that can create dependencies between elements that would be mapped to the same SIMD register, which breaks auto vectorization [(5)](https://www.dataorienteddesign.com/dodbook/node10.html#SECTION0010110000000000000000).
+
 Compile with `-ftree-vectorize -fopt-info-vec-missed -fopt-info-vec` to GCC to make it vectorize more and to learn where auto vectorization failed and why.
 
+The simpler you write the code, the more likely the compiler will be able to optimize it.
 
 # Keep Assembly Code Small
 
