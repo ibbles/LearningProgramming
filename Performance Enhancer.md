@@ -212,7 +212,7 @@ If two systems previously only used separate parts of the objects, with the intr
 Make sure a branch is consistently true or false for a large contiguous chunk of iterations [(6)](https://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-faster-than-processing-an-unsorted-array).
 
 
-# Move correctness guarantees from runtime checks into data layout rules
+# Move Correctness Guarantees From Runtime Checks Into Data Layout Rules
 
 Use the type system to express things like alignment and buffer size multiples, rather than runtime checks [(5)](https://www.dataorienteddesign.com/dodbook/node10.html#SECTION001090000000000000000).
 This gives the compiler more opportunities for optimization and cuts down on the amount of prologue / epilogue code needed around auto-vectorized SIMD loops.
@@ -310,7 +310,13 @@ error: size of array element of type 'f16' (aka 'float') (4 bytes) isn't a multi
 
 How the compiler can allow pointer arithmetic under such conditions is beyond me.
 
+Use `std::assume_aligned` to tell the compiler that a pointer points to aligned memory.
+
+To get an aligned heap-allocated buffer use `std::aligned_alloc`.
+To get an aligned stack/value-allocated buffer use `alignas(32) T data[N];`
+
 Don't have aliasing pointers / references, that can create dependencies between elements that would be mapped to the same SIMD register, which breaks auto vectorization [(5)](https://www.dataorienteddesign.com/dodbook/node10.html#SECTION0010110000000000000000).
+Use `__restrict` to tell the compiler that a pointer doesn't alias with anything.
 
 Compile with `-ftree-vectorize -fopt-info-vec-missed -fopt-info-vec` to GCC to make it vectorize more and to learn where auto vectorization failed and why.
 
