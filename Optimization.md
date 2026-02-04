@@ -167,6 +167,8 @@ Though some may be able to to put a lower bound on the runtime which is sometime
 	- However, the critical path is not always the limiting factor. There is often a significant amount of work outside of the critical path that combined take more time than the critical path.
 - Asymptotic complexity (big-O)
 	- While the asymptotic complexity does tell you about the scaling of the algorithm, it doesn't tell you anything about a particular problem size. That is, for a small `N` the asymptotic complexity can be misleading. For many real-world algorithms that `N` is large enough for the simpler algorithm to win in practice.
+- "I was once thought that writing code like this makes it fast."
+	- 
 
 A few questions to ask when considering one algorithm / implementation over another:
 - Does it reduce passes over data?
