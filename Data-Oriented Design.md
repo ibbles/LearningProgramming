@@ -290,6 +290,30 @@ Also, we reduce the amount of memory wasted to padding since the compiler won't 
 Also, we make it easier to add [[SIMD]] acceleration [(3)](https://youtu.be/SzjJfKHygaQ?list=PLkDceauvDXDyD_7gVFEG6ASTcBTPZaEvH&t=3987).
 
 
+# Large Array Of Things
+
+A data organization technique where we have a `struct Thing` that can represent anything in the system and all the `Thing`s are stored in a large `static Thing things[MAX_THINGS];` [(5)](https://www.youtube.com/watch?v=ShSGHb65f3M)
+
+The 0th element of `things` is a special "nothing" (nil, null) value that is never used [(5)](https://youtu.be/ShSGHb65f3M?t=1766).
+It is set to a `thing` initialized such that nothing happens when interacted with.
+In this way we don't crash when accidentally dereferencing a "does not exist value" as we would if we had used regular pointer and `nullptr` [(5)](https://youtu.be/ShSGHb65f3M?t=2084).
+
+References to other things are stored as indices into the `things` array, using  a `ThingIdx` type, that can be `using ThingIdx = int`.
+References are not stored as pointers since those are unsafe and doesn't serialize very well.
+To represent "no thing" we store a 0, i.e. a reference to the "nothing" `thing` at the start of the array.
+
+Collections of `thing`s are stored as intrusive lists [(5)](https://youtu.be/ShSGHb65f3M?t=1820).
+For example, a thing that has an inventory of `Thing`s would have a `ThingIdx InventoryStart` identifying the start of the inventory list for that `Thing` and each `Thing` in the inventory would have a `ThindIdx InventoryNext` that links that `Thing` in the inventory to the next `Thing` in the same inventory.
+This means that iterating over the items in the inventory is no longer a cache-friendly linear iteration over memory [(5)](https://youtu.be/ShSGHb65f3M?t=2226).
+Instead it is a linked-list traversal where we don't have random-access to the elements [(5)](https://youtu.be/ShSGHb65f3M?t=2212), likely don't get multiple inventory items into cache per memory access, and can't prefetch effectively since the CPU can't know the next memory address to load until the current load as finished and we get the index of the next inventory item.
+This is typically not a problem since the linked lists are often small and iterating them is often not a bottleneck [(5)](https://youtu.be/ShSGHb65f3M?t=2255).
+The operations that iterate all the `Thing`s are often much more significant and having all `thing`s in a single large array makes that operation faster than other, more scattered memory organization approaches.
+
+If there is only one intrusive list in `Thing` that is the owner of a `Thing` then we have eliminated a whole class of bugs that happen when two owners have a pointer / index to the same `Thing` at the same time [(5)](https://youtu.be/ShSGHb65f3M?t=2377).
+A `Thing` cannot be in two lists at once since with that design there is only one `Next` member.
+An item cannot both be on the ground an in a character's inventory, which can prevent loot duplication bugs.
+Instead we can get other kinds of invalid states such as two lists merging, i.e having a shared tail, or the parent reference not referencing the `Thing` that will reach that `Thing` from its child list head [(5)](https://youtu.be/ShSGHb65f3M?t=2473).
+
 
 # References
 
@@ -297,3 +321,4 @@ Also, we make it easier to add [[SIMD]] acceleration [(3)](https://youtu.be/SzjJ
 - 2: [_Data-Oriented Programming_ by Yehonathan Sharvit, 2022](https://www.manning.com/books/data-oriented-programming)
 - 3: [_More Speed & Simplicity: Practical Data-Oriented Design in C++ - Vittorio Romeo - CppCon 2025_ Vittorio Romeo, CppCon @ youtube.com 2025](https://www.youtube.com/watch?v=SzjJfKHygaQ)
 - 4: [_Andrew Kelley: A Practical Guide to Applying Data Oriented Design (DoD)_ by Andrew Kelley, ChimiChanga @ youtube.com 2024](https://www.youtube.com/watch?v=IroPQ150F6c)
+- 5: [_Avoiding Modern C++ | Anton Mikhailov_ by Wookash Podcast  @ youtube.com](https://www.youtube.com/watch?v=ShSGHb65f3M)
