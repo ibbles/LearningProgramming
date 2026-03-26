@@ -1,6 +1,8 @@
 # Cursor Navigation
 
 Single character / line: `h`, `j`, `k`, `l`
+- `:close`: Close a window.
+- `:only`: Close all other windows.
 - `w`: Forward one word.
 - `b`: Backward one word.
 - `W`: Forward one white-space separated word.
@@ -97,6 +99,7 @@ Visual mode is used to select text, for example to copy it.
 
 Use regular cursor navigation to position the end of the selection.
 
+
 # Paragraph Management
 
 - `gqq`: Wrap a long line.
@@ -114,6 +117,46 @@ Open a file in a buffer in a new tab with `:tabe <PATH>`.
 Tabcompletion works.
 
 Switch between buffers with `gt` and `gT`.
+
+
+# Splitting Windows
+
+- `:#split {FILE}` where `#` is an optional number and `{FILE}` is an optional file path: Split the current window into top and a bottom windows.
+  - If given, the number is the number of lines to allocate to the new window.
+- `:#vsplit {FILE}` where `#` is an optional number and `{FILE}` is an optional file path: Split the current window into left and right windows.
+- `:new`: Create a new window with a new empty file above the current window.
+  - Is this really an empty file, or an empty file-less buffer?
+- `:vnew`: Create a new window with a new empty file to the left of the current window.
+
+- `:close`: Close a window.
+- `:only`: Close all other windows.
+
+
+# Moving Between Windows
+
+- `CTRL-W w`: Move between windows.
+- `CTRL-W h`: Move left.
+- `CTRL-W j`: Move down.
+- `CTRL-W k`: Move up.
+- `CTRL-W l`: Move right.
+- `CTRL-W t`: Move to the top window.
+- `CTRL-W b`: Move to the bottom window.
+
+
+# Moving Windows
+
+- `CTRL-W H`: Move window to the far left.
+- `CTRL-W J`: Move window to the bottom.
+- `CTRL-W K`: Move window to the top.
+- `CTRL-W L`: Move window to the far right.
+
+
+# Resizing Windows
+
+- Click and drag the status line.
+- `# CTRL-W +` where `#` is an optional number of lines: Increase the size of a window.
+- `# CTRL-W -` where `#` is an optional number of lines: Decrease the size of a window.
+- `# CTRL-W _` where `#` is an optional number of lines: Set number of lines. If no number then make window as large as it can be.
 
 
 # Commands
@@ -174,6 +217,14 @@ Search can be used to
 I'll investigate this another time.
 
 
+# Setting Options Temporarily
+
+`:set {OPTION}={VALUE}`
+
+For example: `set shiftwidth=2`
+
+Not sure if this is per-window or for the entire session.
+
 # References
 
 - 1: [_Setting autoindentation to spaces in Neowin_ by Maëlan @ stackoverflow.com](https://stackoverflow.com/a/51995699)
@@ -181,4 +232,5 @@ I'll investigate this another time.
 - 3: [_How to copy in vim_ @ learnvim.com](https://www.learnvim.com/guides/how-to-copy-in-vim)
 - 4: [_Vim Command Tier List_ by AdamFrencen @ youtube.com 2025](https://www.youtube.com/watch?v=tAn-7ozV_r0)
 - 5: [_Wrap and unwrap a line in Vim_ by Dave @ davetang.org 2023](https://davetang.org/muse/2023/07/02/wrap-and-unwrap-a-line-in-vim/)
+- 6: [_Splitting windows_ by Bram Noolenaar @ neovim.io](https://neovim.io/doc/user/usr_08/)
 
