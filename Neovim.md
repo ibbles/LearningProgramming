@@ -1,8 +1,6 @@
 # Cursor Navigation
 
 Single character / line: `h`, `j`, `k`, `l`
-- `:close`: Close a window.
-- `:only`: Close all other windows.
 - `w`: Forward one word.
 - `b`: Backward one word.
 - `W`: Forward one white-space separated word.
@@ -18,7 +16,7 @@ Single character / line: `h`, `j`, `k`, `l`
 - `H`: Go to top of screen.
 - `M`: Go to middle of screen.
 - `L`: Go to bottom of screen.
-- `zz`/`zt`/`zb`: Move viewport so so that the current line is at the top, middle, or bottom of the screen.
+- `zt`/`zz`/`zb`: Move viewport so that the current line is at the top, middle, or bottom of the screen.
 - `%`: Jump between matching brackets.
 - `{`/`}`: Move between paragraphs, i.e. empty lines.
 
@@ -90,6 +88,20 @@ To copy a range of complete lines with visual mode:
     - Basically delete the next newline. Or rather, replace the newline with a space.
 - `gJ`: Join lines without adding a space between them.
 
+
+# Search Replace
+
+To replace all occurences of `OLD` with `NEW`:
+```
+:%s/OLD/NEW/g
+```
+
+The format is similar to `sed`.
+
+To ask for confirmation for every replacement add a `c` to the end:
+```
+:%s/OLD/NEW/gc
+```
 
 
 # Visual Mode
