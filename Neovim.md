@@ -244,6 +244,19 @@ Search backwards, perhaps?
     - For example, `dfw` would delete everything up to and including the letter `w`.
 
 
+# Replace
+
+Replace a word:
+- `*`: Search for the word under the cursor.
+- `SHIFT-n`: Go back to the previous match, i.e. where we started the search.
+- `cgn`: Operate on this match.
+- Type the new word.
+- `ESC`: Finish typing the world.
+- `n`: Go to next match.
+- `.`: Redo the replace command.
+- Repean `n.` for every match to replace.
+
+
 # Auto-Completion Complete
 
 [(7)](https://neovim.io/doc/user/usr_24/#_completion)
