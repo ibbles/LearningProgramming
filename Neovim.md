@@ -264,6 +264,9 @@ For example: `set shiftwidth=2`
 
 Not sure if this is per-window or for the entire session.
 
+Skip the `={VALUE}` part to print the current value.
+For example: `set shiftwidth`
+
 # References
 
 - 1: [_Setting autoindentation to spaces in Neowin_ by Maëlan @ stackoverflow.com](https://stackoverflow.com/a/51995699)
