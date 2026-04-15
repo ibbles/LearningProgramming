@@ -790,7 +790,14 @@ git pull
 git merge origin/feature/some-feature
 ```
 
+
+# TODO
+
+Read [The Git Commands I Run Before Reading Any Code (3)](https://piechowski.io/post/git-commands-before-reading-code/)
+
+
 # References
 
 - 1: [_Learn Git Branching_ @ learngitbranching.js.org](https://learngitbranching.js.org/)
 - 2: [_Finding what branch a Git commit came from_ @ stackoverflow.com 2010,2018](https://stackoverflow.com/questions/2706797/finding-what-branch-a-git-commit-came-from)
+- 3: [_The Git Commands I Run Before Reading Any Code_ by Ally Piechowski @ piechowski.io/ 2026](https://piechowski.io/post/git-commands-before-reading-code/)

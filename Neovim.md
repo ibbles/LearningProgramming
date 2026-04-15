@@ -1,3 +1,11 @@
+# Settings
+
+Assign a value to a setting with `:set NAME=VALUE`.
+For example: `:set shiftwidth=2`
+Show a setting's current value with `:echo &NAME`
+For example: `:echo &shiftwidth`
+
+
 # Cursor Navigation
 
 Single character / line: `h`, `j`, `k`, `l`
@@ -51,6 +59,8 @@ Enter insert mode: `i` (insert), `a` (insert after)
 
 - `dd`: Delete the current line.
 - `D`: Delete to end of line.
+- `daw`: Delete a word.
+- `caw`: Change a word, i.e. delete it and enter insert mode.
 
 Delete lines with `#dd` where `#` is the number of lines to delete.
 If `#` is not given then it defaults to 1.
@@ -63,6 +73,8 @@ Use `yy` instead of `dd` to copy lines instead of deleting.
 
 - `r`: Reaplce the current character with the next charater you type.
 - `R`: Enter replace (overwrite) mode.
+
+-`gwip` or `gwap`: Reflow the paragraph to the current text width.
 
 
 # Copying (Yanking) Text
@@ -232,6 +244,29 @@ Search backwards, perhaps?
     - For example, `dfw` would delete everything up to and including the letter `w`.
 
 
+# Replace
+
+Replace a word:
+- `*`: Search for the word under the cursor.
+- `SHIFT-n`: Go back to the previous match, i.e. where we started the search.
+- `cgn`: Operate on this match.
+- Type the new word.
+- `ESC`: Finish typing the world.
+- `n`: Go to next match.
+- `.`: Redo the replace command.
+- Repean `n.` for every match to replace.
+
+
+# Auto-Completion Complete
+
+[(7)](https://neovim.io/doc/user/usr_24/#_completion)
+
+- `CTRL-P`: Match previous.
+- `CTRL-P`: Match next.
+
+
+
+
 # Windows / Panes / Tabs
 
 [_VIM USER MANUAL_ > _Splitting windows_ by  Bram Moolenaar @ neovim.io](https://neovim.io/doc/user/usr_08.html#usr_08.txt).
@@ -275,4 +310,5 @@ For example: `set shiftwidth`
 - 4: [_Vim Command Tier List_ by AdamFrencen @ youtube.com 2025](https://www.youtube.com/watch?v=tAn-7ozV_r0)
 - 5: [_Wrap and unwrap a line in Vim_ by Dave @ davetang.org 2023](https://davetang.org/muse/2023/07/02/wrap-and-unwrap-a-line-in-vim/)
 - 6: [_Splitting windows_ by Bram Noolenaar @ neovim.io](https://neovim.io/doc/user/usr_08/)
+- y: [_Completion_ by Bram Moolenaar @ neovim.io](https://neovim.io/doc/user/usr_24/#_completion)
 
