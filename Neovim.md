@@ -13,6 +13,9 @@ Single character / line: `h`, `j`, `k`, `l`
 - `b`: Backward one word.
 - `W`: Forward one white-space separated word.
 - `B`: Backward one white-space separated word.
+- `0`: To start of line.
+- `^`: To first character on line.`
+- '$': To end or line.
 
 - `fX` where `X` is any character: Move forward to the closest `X` on the same line.
 - `;`: Repeat the prior `fX` where `X` is any character, i.e. step forward to the next `X` on the same line.
