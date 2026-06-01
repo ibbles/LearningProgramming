@@ -21,20 +21,40 @@ find_package(SomeLibrary COMPONENTS SomeFeature AnotherFeature)
 
 In this case the `FindPACKAGE.cmake` file would be named `FindSomeLibrary.cmake`.
 In this case the `PACKAGEConfig.cmake` file would be named `SomeLibraryConfig.cmake`.
+Only one of these is required.
 
 In case the third-party library can have different names use the `NAMES` parameter list:
 ```cmake
 find_package(SomeLibrary NAMES SomeLibrary SomeLibraryLinux SomeLibraryMacOS SomeLibraryWin64)
 ```
 
+CMake looks for
+- `FindPACKAGE.cmake` files in the directories listed in `CMAKE_MODULE_PATH`.
+- `PACKAGEConfig.cmake` files in the directories listed in `CMAKE_PREFIX_PATH`.
 
-A complete example:
+Use `list(APPEND` to add directories to these lists.
+`CMAKE_PREFIX_PATH` will search known subdirectories, so for most libraries you can point to the directory containing `include` and `lib`, you do not need to point all the way to `lib/cmake/PACKAGE/`, which is where the `PACKAGEConfig.cmake` file should be located.
+
+A complete example where `SomeLibraryConfig.cmake` is used to find Some Library:
 ```cmake
 cmake_minimum_required(CMAKE_VERSON 3.10)
 project(MyProject)
 
-# Tell CMake where we store our Find${PACKGE}.cmake files.
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+# Tell CMake where we Some Library has been installed.
+list(APPEND CMAKE_PREFIX_PATH "/MyLibraries/SomeLibrary")
+
+find_package(SomeLibrary REQUIRED)
+add_executable(MyProgram main.cpp)
+target_link_libraries(MyProgram PRIVATE SomeLibrary::LibName)
+```
+
+A complete example where `FindSomeLibrary.cmake` is used to find Some Library:
+```cmake
+cmake_minimum_required(CMAKE_VERSON 3.10)
+project(MyProject)
+
+# Tell CMake where we store our FindPACKAGE.cmake modules.
+list(APPEND CMAKE_PREFIX_PATH "/MyCMakeModules")
 
 find_package(SomeLibrary REQUIRED)
 add_executable(MyProgram main.cpp)
@@ -82,6 +102,15 @@ An both cases above, CMake expects to find `/lib/cmake/SomeLibrary/SomeLibraryCo
 
 If you know where the config or find file for a particular library is then you can set the `<PACKAGE>_DIR` CMake variable to the directory that contains the `<PACKAGE>Config.cmake` or `Find<PACKAGE>.cmake` file.
 For example `/opt/SomeLibrary/lib/cmake/SomeLibrary/`.
+
+
+## Debugging
+
+Run CMake with `--debug-find-pkg=SomeLibrary` to have CMake print a trace of where it searched for various files.
+```shell
+cmake . --debug-find-pkg=SomeLibrary
+```
+
 
 # Fetch Content
 
