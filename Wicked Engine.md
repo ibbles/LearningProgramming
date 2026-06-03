@@ -939,7 +939,27 @@ Let's print everything that seem even remotely possible of being populated after
 We'll use `wi::scene::FindAllEntities` to get a list of entities and the query some of the `wi::ecs::ComponentManager` entities to see what components we have.
 
 
+I've been doing a bit of experimentation and I can create both lights and cubes.
+The cubes even at runtime.
+Though it doesn't seem to do any sharing of GPU resources between the cubes, which may be a problem.
 
+I'm trying to understand how to use the vector types, but they seem very... limited.
+Not sure what the best word to use is.
+There are multiple types, no easy way to convert between them, and each operation seem to be  using a separate type.
+- `XMVECTOR`: A 4-float SIMD register.
+- `XMVECTORF32`: A union between a `float[4]` and a `XMVECTOR`.
+- `XMFLOAT3`: `x`, `y`, `z` struct.
+
+Wicked Engine is mostly using `XMFLOAT3`.
+Operators are on `XMVECTOR`.
+I'm trying to understand how to place cubes in a circle.
+I want this:
+```cpp
+float radius {5.0f};
+Vec3 direction {sin(t), 0.0f, cos(t)};
+Vec3 position = radius * direction;
+transform->Translate(position);
+```
 
 
 
