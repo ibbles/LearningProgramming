@@ -1,7 +1,12 @@
 Taskflow is a task graph computing system.
-This means that instead of chaining functions together as the program is executed the structure of the program is defined up-front in a task graph that is executed by a runtime.
+This means that instead of chaining functions together as the program is executed the structure of the program is defined up-front (not entirely true) in a task graph that is executed by a runtime.
 The motivation is to make it easier to write parallel and heterogeneous programs [(6)](https://youtu.be/MX15huP5DsM?t=22), which is critical for performance, by hiding as much as possible of the technical details of thread synchronization and concurrency control.
 This make it possible to write high performance software while maintaining high productivity [(6)](https://youtu.be/MX15huP5DsM?t=90).
+
+Taskflow is not a data management library [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=355).
+It makes not assumptions about how your data is organized or stored.
+It only cares about tasks and dependencies, how the tasks communicate and share data is up to the application.
+The one data-related thing Taskflow does it to let you association a single piece of application data with a task [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=423).
 
 The following is an example graph from the Taskflow paper [(1)](https://taskflow.github.io/papers/tpds21-taskflow.pdf), we will dive into  what the different symbols mean throughout this note.
 ![](./images/taskflow/example_task_graph.jpg)
@@ -10,7 +15,7 @@ The Taskflow C++ library provides an API for defining tasks, task graphs, and a 
 These concepts are codified in three types [(6)](https://youtu.be/MX15huP5DsM?t=152):
 - `tf::Task`: A representation of a piece of work.
 - `tf::Taskflow`: A collection of tasks and their dependencies, a task dependency graph.
-- `tf::Executor`: A runtime for executing task graphs, manages a set of worker threads.
+- `tf::Executor`: A runtime for executing task graphs, manages a set of worker threads [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=245).
 
 Taskflow provides a number of different task types with different features and characteristics.
 - Static task: A callback.
@@ -22,6 +27,23 @@ The type a task has depends on the signature of the callback function associated
 A `void()` function creates a static task.
 A `void(tf::Subflow&)` function creates a dynamic task.
 An `int()` function creates a condition task.
+
+
+# Installation
+
+Taskflow is a header-only library without any third-party dependencies  [(8)](https://youtu.be/u4vaY0cjzos?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=249).
+This makes it very easy to integrate into a project's build pipeline.
+You need to:
+- 1: Get the Taskflow header files.
+- 2: Tell your compiler where the Taskflow header files are.
+- 3:Pass `-pthread` to the compiler.
+
+Example build steps:
+```shell
+$ git clone https://github.com/taskflow/taskflow.git .
+$ g++ -std=c++20 examples/simple.cpp -I ./ -O2 -pthread -o simple
+$ ./simple
+```
 
 
 # A Simple Example
@@ -61,9 +83,37 @@ The task graph produced by this code consists, as expected, of a single task:
 To generate the diagram the example code was extended with some additional statements to assign names to the Taskflow and the Task and to generate the diagram.
 
 
+# `tf::Task`
+
+Behind the scenes, Taskflow maintains a graph of nodes that implements the library's functionality [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=156).
+`tf::Task` is a handle to one of the nodes in that graph.
+Being a handle and not the node itself, `tf::Task` is a type that is small and cheap to copy.
+The copy of the handle will reference that same underlying node, and not a new node.
+Use the `tf::Task` object to get access to the node and modify it.
+For example to set dependencies, assign a name, assign application data [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=422), change the work callback, query statistics, etc [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=172).
+
+```cpp
+void configureTask(tf::Task task)
+{
+	task.name("My Task");
+	task.work(my_callback);
+	task.data(my_data);
+}
+```
+
+
+A Task has a lifetime [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=508).
+A Task's lifetime starts when it is created as part of a Taskflow.
+The Task remains alive as long as the Taskflow does.
+Not that the task lifetime is not tied to the lifetime of the returned `tf::Task` value, that is just a handle whose destructor does nothing.
+The lifetime of the callable, such as a lambda object with captures, is tied to the lifetime of the Task.
+So when a Taskflow is destroyed its Tasks are also destroyed, and with them the callable objects the Tasks hold.
+It is important that a Taskflow is kept alive as long as an Executor is running it.
+
 # Creating Static Tasks
 
-A static task can be created from any callable, such as a free function, a lambda expression, or an instance of a type with a call operator, that does not take any arguments and doesn't return anything.
+A static task graph is one where the structure of the task graph is know up-front, before execution starts [(10)](https://youtu.be/QdjwrH1H4ro?t=78)
+A static task can be created from any callable, such as a free function, a lambda expression, or an instance of a type with a call operator, that does not take any arguments and doesn't return anything [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=95).
 To create a `tf::Task` instance we call the `emplace` member function of the `tf::Taskflow` instance that should  own the task.
 This creates a `tf::Task` instance stored inside the `tf::Taskflow`.
 The return value of `tf::Taskflow::emplace` is one or more `tf::Task` instances, one for each callable passed to `emplace`.
@@ -83,9 +133,20 @@ auto [task_1, task_2, task_3] = taskflow.emplace(
 );
 ```
 
+
+A placeholder task is a `tf::Task` created with `tf::Taskflow.placeholder` instead of `emplace` [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=115).
+A placeholder is just like any other `tf::Task`, i.e. we can use it to set up dependencies, except that it doesn't yet have a work callback assigned.
+That is done with the `tf::Task::work` member function [(10}](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=184).
+```cpp
+tf::Taskflow taskflow;
+tf::Task placeholder = taskflow.placeholder();
+placeholder.work(someFunction);
+```
+
+
 # Creating Task Dependencies
 
-Tasks can either precede or succeed other tasks.
+Tasks can either precede or succeed other tasks [(8)](https://youtu.be/u4vaY0cjzos?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=83).
 A task that precede another task will run to completion before that other task starts.
 A task that succeeds another task will not start until that other task has run to completion.
 The relationship is symmetric, meaning that if a task A  precedes another task B then task B succeeds task A.
@@ -119,18 +180,93 @@ In this case we could achieve the same thing using `second_task.succeed(first_ta
 ![](./images/taskflow/creating_dependencies.jpg)
 
 
+# Inspecting Task Dependencies
+
+`tf::Task` provides the `for_each_predecessor` and `for_each_successor` member functions which loop over the predecessors and successors, respectively, and calls a given callback for each [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=201).
+To enumerate all tasks in a Taskflow, use `tf::Taskflor::for_each_task`.
+
+```cpp
+void print_dependencies(tf::Taskflow& taskflow)
+{
+	taskflow.for_each_task([](tf::Task task)
+	{
+		std::cout << "Task " << task.name() << "\n";
+		task.for_each_predecessor([](tf::Task predecessor)
+		{
+			std::cout << predecessor.name() << "->" << task.name() << ' ';
+		});
+		std::cout << '\n';
+		task.for_each_successor([](tf::Task sucessor)
+		{
+			std::cout << task.name() << "->" success.name() << ' ';
+		});
+	});
+}
+```
+
+
+The Taskflow library has a built-in Taskflow writer, `tf::Taskflow::dump` that writes the tasks and dependencies in DOT format to an output stream.
+```cpp
+bool writeTaskGraphToFile(tf::Taskflow& taskflow, const std::filesystem::path& path)
+{
+	std::ofstream file(path, std::ofstream::out | std::ofstream::trunc);
+	if (!file)
+		return false;
+	taskflow.dump(file);
+	file.close();
+	return !file.fail();
+}
+```
+
+# `tf::Executor`
+
+An Executor, `tf::Executor`, manages a set of worker threads [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=245)
+The callbacks held by the Tasks owned by a Taskflow passed to one of the Executors `run` member functions will be called by those worker threads.
+
+
 # Running A Taskflow
 
-A taskflow is run by passing it to an executor [(6)](https://youtu.be/MX15huP5DsM?t=182), to one of the `tf::Executor::run` family of functions.
-This function returns a future which provides the `wait` function to block until the taskflow has finished executing.
+A taskflow is run by passing it to an executor [(6)](https://youtu.be/MX15huP5DsM?t=182), to one of the `tf::Executor::run` family of functions [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=240).
+The Executor provides a number of `run` functions [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=276):
+- `run`
+	- Run the Taskflow once.
+- `run_n`
+	- Run the taskflow a given number of times.
+- `run_until`
+	- Runt he taskflow repeatedly until a given predicate is true.
+
+The `run` functions can be either block or non-blocking [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=264).
+The non-blocking `run` functions return a future than can be waited on, used to determine whether a Taskflow has finished executing yet, and to cancel the run [(10)](https://youtu.be/QdjwrH1H4ro?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=289).
+
 A taskflow having finished executing does not mean that all tasks in it has executed.
 Branching means that some tasks may be skipped.
 We are however guaranteed that no further task execution in the taskflow will happen after `wait` has returned.
 
+```cpp
+// Taskflow includes.
+#include "taskflow/taskflow.hpp"
+
+// Standard library includes.
+#include <iostream>
+
+void first_work() { std::cout << "First work.\n"; }
+void second_work() { std::cout << "Second work.\n"; }
+
+int main()
+{
+	tf::Executor executor;
+	tf::Taskflow taskflow;
+	tf::Task first_task = taskflow.emplace(::first_work);
+	tf::Task second_task = taskflow.emplace(::second_work);
+	first_task.precede(second_task);
+	executor.run(taskflow).wait();
+	return 0;
+}
+```
 
 # Creating Multiple Tasks
 
-We can pass multiple callables to `tf::Taskflow::emplace` [(6)](https://youtu.be/MX15huP5DsM?t=161).
+We can pass multiple callables to `tf::Taskflow::emplace` [(6)](https://youtu.be/MX15huP5DsM?t=161), [(9)](https://youtu.be/QsmoXNXJoDY?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=295).
 This causes multiple `tf::Task` objects to be created and returned in a tuple.
 C++ structured bindings doesn't allow us to name the type of the elements in the tuple, so we have to use `auto` instead of `tf::Task`.
 
@@ -198,7 +334,9 @@ void input_work()
 }
 
 // This task is not scheduled in main, instead it is
-// scheduled by create_dynamic_tasks.
+// scheduled by create_dynamic_tasks. The number of
+// tasks created that all call this function is determined
+// by 'input_work' above.
 void dynamic_work() { std::cout << "Dynamic work.\n"; }
 
 void create_dynamic_tasks(tf::Subflow& subflow)
@@ -233,7 +371,7 @@ Tasks that succeeds a parent task also succeeds the dynamic tasks spawned by tha
 
 # Conditions And Loops
 
-Tasks need not be performed in a pure top-to-bottom order.
+Tasks need not be performed in a pure top-to-bottom order [(11)](https://www.youtube.com/watch?v=SghMH2TGXEs).
 Through condition tasks we can dynamically decide to only run some branches of the graph, or run some parts multiple times.
 That is, a Taskflow is not a DAG.
 There a are some caveats though that we will get to.
@@ -241,18 +379,33 @@ There a are some caveats though that we will get to.
 Let's start with the basics.
 
 
-## If-Else
+## If-Else / Condition Task.
 
-A condition task is one that chooses and schedules only one if its successors, all other successors are ignored [(6)](https://youtu.be/MX15huP5DsM?t=1408).
+Taskflow can do in-graph control flow, meaning that as the tasks are executed they can decide which of multiple possible chains are to be executed next.
+This is called a condition task [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=55), [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=178).
+A condition task is a task with multiple successor tasks and a callback with an integer return type.
+A condition task is one that chooses and schedules only one if its successors, all other successors are ignored [(6)](https://youtu.be/MX15huP5DsM?t=1408), [(8)](https://youtu.be/u4vaY0cjzos?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=147), [(9)](https://youtu.be/QsmoXNXJoDY?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=356).
 Remember that the successors are the tasks that the conditional task precedes.
 The selection is made based on the return value if the conditional task, which is an index  into the list of successors.
+If the returned value is not a valid index then no task is run [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=228).
+
 In the following dependencies setup example we create a situation where if the condition task returns 0 then the first task is scheduled, if the return value is 1 then the second task is scheduled, and if the return value is 3 then the third task is scheduled.
 ```cpp
-conditional_task.precede(first_task, second_task, third_task);
+int conditionTask(); // Retunrs 0, 1, or 2.
+
+void work()
+{
+	tf::Taskflow taskflow;
+	// TODO Create first_task, second_task, and third_task.
+	tf::Task condition_task = taskflow.emplace(conditionTask);
+	conditional_task.precede(first_task, second_task, third_task);
+	// Depending on what conditionTask returns when condition_task is run,
+	// either first_task (return 0), second_task (return 1), or
+	// third_task (return 2) will be run next.
+}
 ```
 
 Let's look at a concrete example, one that reads an integer from standard input and prints a message indicating whether the number is even or odd.
-
 ```cpp
 // Taskflow includes.
 #include <taskflow/taskflow.hpp>
@@ -301,9 +454,63 @@ The task graph is visualized as follows:
 
 Notice how the the Even Or Odd node is shown as a diamond instead of an ellipse, this indicates that it is a condition task.
 Notice how the dependency lines out of the condition task are dashed instead of solid, this indicates that these dependencies are _weak_ dependencies.
-Weak dependencies differ from the regular strong dependencies in that they sidestep the regular dependency management and schedule the dependee task immediately regardless of what other dependencies the dependee task may have, and a task that has weak dependencies to it may be scheduled as soon as all strong dependencies have been resolved regardless of the state of the weak dependencies.
 
-The following diagram exemplifies the interplay between strong and weak dependencies using an example of a bad task graph setup.
+We can have any number of tasks succeeding a condition task, which creates a switch-case control flow [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=299).
+```c++
+auto [start, select, case1, case2, case3, done] = taskflow.emplace(
+	[](){ std::cout << "Start\n"; },
+	[](){ std::cout << "Switch\n"; return rand() % 3 },
+	[](){ std::cout << "  Case 1\n"; return 0; },
+	[](){ std::cout << "  Case 2\n"; return 0; },
+	[](){ std::cout << "  Case 3\n"; return 0; },
+	[](){ std::cout << "Done\n"; }
+);
+
+start.precede(select);
+select.precede(case1, case2, case3);
+done.succeed(case1, case2, case3);
+```
+
+Since all case task chains join at the same done-task, it is important that those dependencies are weak dependencies since only one of the case tasks will actually run [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=333).
+We achieve this by making them condition tasks.
+This is a bit weird, since those tasks will always return the same succeeding task index since there is only one valid index, but is the only way we currently have of creating weak dependencies.
+
+
+# Strong And Weak Dependencies
+
+A strong dependency is a preceding link from a non-condition task to another task [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=679).
+A weak dependency is a preceding link from a condition task to another task [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=685).
+In graph visualizations, strong links are shown as solid lines and weak dependencies are shown as dashed lines.
+
+A task without any preceding tasks, i.e. a task without any incoming dependencies, weak or strong, can be started immediately [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=698).
+When a task completes the Executor behaves differently depending on if the completed task is a condition task or not.
+If the completed task is a condition task then it returned a set of indices identifying which successor tasks should be enqueued.
+If the completed task is a non-condition task then the Executor will decrement the strong dependencies counter of all successor tasks.
+For any strong dependencies counter that reaches zero, enqueue the corresponding successor task.
+
+Weak dependencies differ from the regular strong dependencies in that they sidestep the regular dependency management and schedule the dependee task immediately regardless of what other dependencies the dependee task may have, and a task that has weak dependencies to it may be scheduled as soon as all strong dependencies have been resolved regardless of the state of the weak dependencies [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=665).
+
+It is the developer, the user of the Taskflow library, that is responsible to ensure that the task graph setup is valid [(11](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=811).
+A valid task graph is both schedulable and race-free.
+Schedulable means that the task graph can be executed from start to finish, i.e. there is at least one start task that can be run immediately and there is a task sequence that eventually terminates.
+Showing these properties of a task graph is non-trivial and I don't know of a way to verify it programatically.
+There are many ways to make mistakes, many pitfalls:
+- No source task [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=837).
+	- A developer may try to start a task graph with a loop task, i.e. a task that has itself as a dependency.
+	- Such a task it not a source task and will not be scheduled at the start of the graph execution.
+	- To fix the problem, add a dedicated source task with no incoming dependencies and an outgoing dependency to the loop task.
+- Task race through a strong and a weak dependency [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=861).
+	- A task has both a strong and a weak incoming dependency.
+	- Both of these can schedule the task independently of each other.
+	- This can cause the task to be scheduled twice at the same time, or scheduled again while it is already running.
+	- To fix the problem, and an extra non-condition task in the middle of the weak dependency, turning the incoming weak dependency into a strong dependency.
+	- The result of this is that the task will only run after both the condition task, the extra task, and the original strong dependency providing task has run.
+- Task race through two weak dependencies [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=899)
+	- Two condition tasks that both have a weak dependency to some other task.
+	- Since that other task will be scheduled as soon as any weak dependency is satisfied, if both condition tasks want to schedule the other task we have a race on that task.
+	- I don't know how to solve this.
+
+The following diagram exemplifies the interplay between strong and weak dependencies using an example of a bad task graph.
 
 ![](./images/taskflow/weak_and_strong_dependencies.jpg)
 
@@ -348,11 +555,44 @@ Let's consider an even more complicated case where we can know ahead of time if 
 How would I restructure this so that Submit Orders can run as soon as it is known that no more orders will be prepared?
 
 
+## Multi-Condition Task
+
+A condition task is not limited to returning, and thus scheduling, a single task.
+By returning multiple successor task indices in a `tf::SmallVector<int>` the Executor will schedule all tasks corresponding to the returned indices [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=408).
+In the following example tasks `a` and `c` will be run after `dispatch`  since `dispatch` returns 0 and 2.
+```cpp
+tf::Task dispatch = taskflow.emplace(
+	[]() -> tf::SmallVector<int> { return {0, 2} }
+);
+auto [a, b, c] = taskflow.emplace(
+	[]() { std::cout << "A\n"; },
+	[]() { std::cout << "B\n"; },
+	[]() { std::cout << "C\n"; }
+);
+```
+
+
+
 ## Loop
 
-This separation between weak and strong rules makes it possible to encode loops in the dependency graph.
+It i possible to have dependencies that point back up to earlier tasks [(11)](https://youtu.be/SghMH2TGXEs?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=91).
+This makes possible to create loops, also called "iterative control flow".
+The separation between weak and strong rules makes it possible to encode loops in the dependency graph [(9)](https://youtu.be/QsmoXNXJoDY?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=356).
 We create a dependency out of a condition task that goes back up to an earlier task that will eventually connect back down to the condition task.
 The loop will continue executing until the condition task decides to take another path and break the loop.
+
+```cpp
+tf::Taskflow taskflow;
+tf::Task initialize = taskflow.emplace(::initialize);
+tf::Task optimize = taskflow.emplace(::optimize);
+tf::Task is_converged = taskflow.emplace(isConverged);
+tf::Task stop = taskflow.emplace(::stop);
+
+initialize.precede(optimize);
+optimize.precede(is_converged);
+is_converged.precede(optimize, stop); // 0: optimize ; 1: stop.
+```
+
 However, there are some things we must keep in mind when setting up the graph.
 For example, we might think that the following will run Increment Counter until the callback associated with Is Goal Reached decides to return 1 instead of 0.
 
@@ -368,6 +608,30 @@ The strong dependency from Start to Increment Counter will be enough to schedule
 
 It is OK to have multiple strong dependencies to the task that form the start of the loop:
 ![](./images/taskflow/multi_predecessor_loop_start.jpg)
+
+
+If the  main work task, Increment Counter above, should not be executed at all in some cases we can build a while-loop like structure as follows:
+```cpp
+void loop()
+{
+	tf::Taskflow taskflow;
+	int i; // Loop counter.
+	auto [init, loop, body, back, done] = taskflow.emplace(
+		[&] { std::cout << "i=0\n"; i=0; },
+		[&] { std::cout << "while i<5\n"; return i < 5 ? 0 : 1; },
+		[&] { std::cout << "  ++i\n"; ++i; },
+		[&] { std::cout << "  back\n"; return 0; } // Return int to create a weak link up.
+		[&] { std::cout << "done\n"; }
+	);
+
+	init.precede(cond);
+	cond.precede(body, done); // 0: Execute loop body. 1: Exit loop.
+	body.precede(back);
+	back.precede(cond); // Back precedes an earlier task.
+}
+```
+
+![While loop](./images/taskflow/while_loop.jpg)
 
 
 ## Gauss-Seidel Solver
@@ -472,9 +736,54 @@ int main()
 Unfortunately the name of the inner Taskflow is not displayed in the diagram.
 
 
+# Dynamics Task Graph Programming - `AsyncTask`
+
+So far we have seen task graph where at least the skeleton of the task graph is prepared up-front in a `tf::Taskflow` and scheduled as a whole to the `tf::Executor`.
+Taskflow also supports fully dynamic task graph programming where tasks are submitted to the executor immediately upon creation and the dependencies are passed to the factory function [(7)](https://www.youtube.com/watch?v=6Jd9Zyl9SDc), [(8)](https://youtu.be/u4vaY0cjzos?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=185).
+In this case there is no `tf::Taskflow` object, the tasks are created directly on the `tf::Executor` using either `dependent_async` or `silent_dependent_async`. The non-`silent` variant returns, in addition to the created `tf::Task`, an `std::future` object that can be waited on, while the `silent` variant only returns the created `tf::Task` [(9)](https://youtu.be/QsmoXNXJoDY?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=516).
+
+An advantage to this approach, compared to creating the task graph up-front, is that task graph creation can overlap with task execution [(8)](https://youtu.be/u4vaY0cjzos?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=232), [(9)](https://youtu.be/QsmoXNXJoDY?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=444).
+This is important when the task graph consist of a large number of quickly executing tasks, as the task graph creation takes a significant fraction of the program runtime in such cases.
+
+```cpp
+// Taskflow includes.
+#include <taskflow/taskflow.hpp>
+
+// Declare worker functions that will be called by the tassks.
+void loadData();
+void collectSuccesses();
+void collectFailures();
+void writeResults();
+
+// Function that creates and runs a task graph.
+void work()
+{
+	// Create an executor that represents the execution environment
+	// for our taks.
+	tf::Executor executor;
+
+	// Create tasks and dependencies for the first, hidden, part of the task graph.
+	tf::Task load_data = executor.silent_dependent_async(loadData);
+	tf::Task collect_successes = executor.silent_dependent_async(collectSuccesses, load_data);
+	tf::Task collect_failures = executor.silent_dependent_async(collectFailures, load_data);
+
+	// The final part of the task graph, the task we must wait for before the function
+	// can return, can either be created with a future we can wait on, or created without
+	// a future and instead we wait for the entire task graph.
+
+	// Option 1: Create the last task along with a future to wait on.
+	[write_results, future] = executor.dependent_async(writeResults, collect_successes, collect_failures);
+	future.wait();
+
+	// Option 2: Create the last task just like the other takss and wait for the entire graph.
+	tf::Task write_results = executor.silent_dependent_async(writeResults, collect_successes, collect_failures);
+	executor.wait_for_all();
+}
+```
+
 # Profiling
 
-There is a built-in profiler that records start and stop times of a task graph's execution.
+There is a built-in profiler that records start and stop times of a task graph's execution [(9)](https://youtu.be/QsmoXNXJoDY?list=PLyCypiNN-fjlSioqrEkL4QsKZBawA5Zk1&t=833).
 Run with the `TF_ENABLE_PROFILER` environment variable set to the path of a JSON file to write profiling data to.
 ```shell
 env TF_ENABLE_PROFILER=taskflow_profiling.json  ./MY_APP
@@ -498,3 +807,8 @@ You can also self-host the profiler front-end, see https://github.com/taskflow/t
 - 4: [_Taskflow Profiler_ @ taskflow.github.io](https://taskflow.github.io/tfprof/)
 - 5: [_Taskflow Handbook_ by Dr. Tsun-Wei Huang @ taskflow.github.io](https://taskflow.github.io/taskflow/pages.html)
 - 6: [_Taskflow: A Parallel and Heterogeneous Task Programming System Using Modern C++_ by Tsung-Wei Huang, CppCon @ youtube.com 2020](https://www.youtube.com/watch?v=MX15huP5DsM)
+- 7: [_Dynamic Asynchronous Tasking with Dependencies - Tsung-Wei (TW) Huang - CppCon 2025_ by Tsung-Wei Huang, CppCon @ youtube.com 2025](https://www.youtube.com/watch?v=6Jd9Zyl9SDc)
+- 8: [_Taskflow in 5 minutes_ by Tsung-Wei Huang @ youtube.com 2025](https://www.youtube.com/watch?v=u4vaY0cjzos)
+- 9: [_Taskflow in 15 minutes_ by Tsung-Wei Huang @ youtube.com 2025](https://www.youtube.com/watch?v=QsmoXNXJoDY)
+- 10: [_Static Task Graph Programming (STGP) in Taskflow_ by Tsung-Wei Huang @ youtube.com 2025](https://www.youtube.com/watch?v=QdjwrH1H4ro)
+- 11: [_Control Taskflow Graph (CTFG) Programming Model in Taskflow_ by Tsung-Wei Huang @ youtube.com 2025](https://www.youtube.com/watch?v=SghMH2TGXEs)
