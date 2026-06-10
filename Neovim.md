@@ -19,6 +19,7 @@ Single character / line: `h`, `j`, `k`, `l`
 
 - `fX` where `X` is any character: Move forward to the closest `X` on the same line.
 - `;`: Repeat the prior `fX` where `X` is any character, i.e. step forward to the next `X` on the same line.
+- `FX` where `X` is any character: Move backward to the closes `X` on the same line.
 
 - `#gg` where `#` is a number: Go to line.
 - `:#` where `#` is a number: Also go to line number.
@@ -265,7 +266,7 @@ Replace a word:
 [(7)](https://neovim.io/doc/user/usr_24/#_completion)
 
 - `CTRL-P`: Match previous.
-- `CTRL-P`: Match next.
+- `CTRL-N`: Match next. (I think.)
 
 
 
