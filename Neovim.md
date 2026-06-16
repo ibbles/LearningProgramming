@@ -28,6 +28,8 @@ Single character / line: `h`, `j`, `k`, `l`
 - `H`: Go to top of screen.
 - `M`: Go to middle of screen.
 - `L`: Go to bottom of screen.
+- `CTRL+d`: Half-page down.
+- `CTRL+u`: Half-page up.
 - `zt`/`zz`/`zb`: Move viewport so that the current line is at the top, middle, or bottom of the screen.
 - `%`: Jump between matching brackets.
 - `{`/`}`: Move between paragraphs, i.e. empty lines.
@@ -236,8 +238,7 @@ Start a search in the current file by typing `/` followed by a pattern to search
 Use `n` and `N` top step between matches.
 Use `:noh` to end the search.
 
-There is also something with `?`, not sure what that does yet.
-Search backwards, perhaps?
+To search up instead of down, use `?` instead of `/`.
 
 - `*`/`#`: Start a search for the word the cursor is currently on.
 
