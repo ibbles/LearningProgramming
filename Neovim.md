@@ -270,6 +270,12 @@ Replace a word:
 - `CTRL-N`: Match next. (I think.)
 
 
+# Macros
+
+- `qX` where `X` is a register name (`[a-z0-9]`): Start recording macro into register `X`.
+- `q`: End macro recording.
+- `@X` where `X` is a register name (`[a-z0-9]`): Execute macro in register `X`.
+- `#@X` where `#` is a number and `X` a name: Execute macro `#` times.
 
 
 # Windows / Panes / Tabs
