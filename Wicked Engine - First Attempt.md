@@ -566,7 +566,7 @@ I have learned how to load a compiled model,
 ```cpp
 wi::scene::LoadModel
 ```
-bu the window is still just black.
+but the window is still just black.
 I think the [Sponza](https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Crytek_Sponza.png/960px-Crytek_Sponza.png) scene include light sources.
 
 It seems component types must implement the `Serialize` function even though the documentation says it shouldn't need to.
