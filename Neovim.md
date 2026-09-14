@@ -505,6 +505,14 @@ It has a few shortcuts of it's own:
 - `CTRL-N`: Match next. (I think.)
 
 
+# Macros
+
+- `qX` where `X` is a register name (`[a-z0-9]`): Start recording macro into register `X`.
+- `q`: End macro recording.
+- `@X` where `X` is a register name (`[a-z0-9]`): Execute macro in register `X`.
+- `#@X` where `#` is a number and `X` a name: Execute macro `#` times.
+
+
 # Windows / Panes / Tabs
 
 [_VIM USER MANUAL_ > _Splitting windows_ by  Bram Moolenaar @ neovim.io](https://neovim.io/doc/user/usr_08.html#usr_08.txt).
