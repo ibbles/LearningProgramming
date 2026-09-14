@@ -1,0 +1,2 @@
+- back end: stuff in the server. Database, load balancing, file storage..., are common parts of the back end.
+- front end: Stuff in the browser. HTML, CSS, and JavaScript are common parts of the front end.
