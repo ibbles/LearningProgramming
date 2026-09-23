@@ -31,10 +31,17 @@ Architecture describe the building blocks of software:
 Functionality is what the software does.
 
 
-# Residue
+# Properties Of Systems
 
-Residue is left over of a system after it is exposed to some form of stress.
-Residue is a unit of software architecture that incorporates time, uncertainty, and change.
+## Ergodicity
+
+In this context, ergodicity means that the future of a system is determined by the past.
+In other words, if I observe a system over time eventually I will be able to predict future events in that system.
+An ergodic system is typically ordered.
+
+Business systems are often not ergodic.
+We cannot know what the business system will look like in the future since we cannot predict the environment in which the system will operate in in the future.
+
 
 
 # Residuality Theory
@@ -50,3 +57,9 @@ The residuality technique is the result of studying architectures designed in fa
 Where requirements are incomplete.
 
 By stressing an architecture being designed it is possible to arrive at a solid, dependable, and well documented architecture.
+
+## Residue
+
+Residue is left over of a system after it is exposed to some form of stress.
+Residue is a unit of software architecture that incorporates time, uncertainty, and change.
+Residue is not a unit of a software program.
