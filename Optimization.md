@@ -1,4 +1,7 @@
 Optimization is the act of modifying a program, or a part of a program, so that it finishes in a shorter amount of time, or uses less of some other resource.
+Optimization increases [[Performance]].
+Optimization either inserts [[Performance Enhancer]]s or removes [[Performance Blocker]]s.
+There are different techniques for [[Optimizing Core Bound Applications]] and [[Optimizing Memory Bound Applications]] [(2)](https://youtu.be/Fs_T070H9C8?t=271).
 
 Often the problem formulation is a bit to vague to be useful.
 A user of a game may complain "_The framerate goes down when I create a bunch of units!_".
@@ -185,6 +188,9 @@ that we are accessing over a WiFi connection,
 and the file is on a spinning-platter drive,
 that is currently in a power-safe state and needs to spin up before any data can be read.
 I don't even want to guess how many clock cycles that `addl` instruction will stall the thread.
+
+
 # Resources
 
 - 1: [_Data-Oriented Design_ > _Optimizations_ by Richard Fabian, 2018](https://www.dataorienteddesign.com/dodbook/node9.html#SECTION00930000000000000000)
+- 2: [_Introduction to Hardware Efficiency in Cpp - Ivica Bogosavljevic - CppCon 2022_ by Ivica Bogosavljevic, CppCon @ youtube.com 2022](https://www.youtube.com/watch?v=Fs_T070H9C8)
