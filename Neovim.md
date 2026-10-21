@@ -247,6 +247,11 @@ Selecting between brackets (`(){}[]<>` I assume all of these work.):
 Run these two after each other to rewrap a paragram.
 Binding this to a keyboard shortcut is a good idea if you write a lot of text.
 
+To do visual line wrap word wrap soft wrap do:
+- `:set wrap`: Enable visual line wrapping.
+- `:set linebreak`: Break long lines at word boundaries.
+- `:set breakindent`: Indent continuation lines.
+
 
 # Buffers
 
