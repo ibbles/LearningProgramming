@@ -414,6 +414,9 @@ set softtabstop=4
 - `#==`: Where `#` is a number, auto-indent the next `#` lines.
 
 
+See [_Vim 'Indentation Hell': A Best Effor Guide_](https://gist.github.com/LunarLambda/4c444238fb364509b72cfb891979f1dd).
+
+
 # Search
 
 Start a search in the current file by typing `/` followed by a pattern to search for and end with Enter [(2)](https://neovim.io/doc/user/usr_03.html#03.8).
@@ -604,4 +607,5 @@ For example: `set shiftwidth`
 - 8: [_Vim As Your Editor_  by ThePrimeagen @ youtube.com 2022](https://www.youtube.com/playlist?list=PLm323Lc7iSW_wuxqmKx_xxNtJC_hJbQ7R)
 - 9: [_Macros in Vi editor_](https://www.geeksforgeeks.org/linux-unix/macros-in-vi-editor/)
 - 10: [_Neovim docs_ > _Motion_ > _Jump_ @ neovim.io](https://neovim.io/doc/user/motion/#jump-motions)
+- 11: [_Vim 'Indentation Hell': A Best Effort Guide_ by Lunar Lamda @ gist.github.com 2019](https://gist.github.com/LunarLambda/4c444238fb364509b72cfb891979f1dd)
 
