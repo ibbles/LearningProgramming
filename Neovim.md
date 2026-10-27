@@ -380,13 +380,28 @@ Use `:w !SHELL_COMMAND` to write the current buffer's contents into the stdin of
 
 The `expandtab` setting controls whether indentation is done with tabs or spaces.
 When `expandtab` is true indentation is done with spaces.
+Disable `expandtab` by setting `noexpandtab`.
+
+```
+:set expandtab  # Pressing Tab will insert spaces.
+:set noexpandtab  # Pressing Tab will insert a tab character.
+```
 
 The `shiftwidth` setting control how wide an indentation is.
 If `shiftwidth` is 0 then `tabstop` is used instead.
 
 A literal tab character (`\t`) is rendered `tabstop`  wide.
 
-`~/.config/vim/init.vim`
+`~/.config/nvim/init.lua`:
+```lua
+local o = vim.opt
+o.expandtab = true  # Insert spaces when indenting.
+o.tabstop = 4  # Set how wide a tab character should be rendered.
+o.shiftwidth = 0  # Use tabstop as the width for indentation as well.
+```
+
+
+`~/.config/vim/init.vim`:
 ```
 set tabsop=8
 
