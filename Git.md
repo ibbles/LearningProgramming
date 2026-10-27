@@ -128,6 +128,7 @@ You can see which branch the working copy is on with
 ```shell
 git branch --show-current
 ```
+
 The branch pointer is updated to the new commit when we make a new commit while being on that branch.
 Multiple branches can point to the same commit.
 When a commit is made only the current branch is advanced to the new commit.
@@ -374,6 +375,25 @@ The other commit remains in the history but the changes it made are hidden by th
 
 ```shell
 git revert HEAD~1
+```
+
+
+# Restore
+
+Restore is used to throw away local modification and return to the state known to Git.
+Only modifies files tracked by Git, untracked files can be removed with `git clean`.
+This is useful when you have started some work but discover that the idea being pursued is wrong and you want to start over.
+It is also useful when you want to merge with the `origin` version of the branch but the merge is blocked by `Your local changes to the following files would be overwritten by merge` and the changes are such that you do not want to commit them but can recreate them later if needed, for exaple using `git stash` to stash them now and apply them later.
+
+```shell
+git restore MY_FILE  # Restore a single file.
+git restore .  # Restore a directory. I assume this is recursive but haven't tested.
+```
+
+Restore can also be used to unstage local changes.
+```shell
+git restore --staged MY_FILE
+git restore --staged .
 ```
 
 
@@ -790,6 +810,27 @@ git pull
 git merge origin/feature/some-feature
 ```
 
+
+# Diff
+
+## Against A Remote Branch
+
+We can diff a file in our checked out branch against a remote branch.
+This is useful when we get a `Your local changes to the following files would be overwritten by merge` error.
+```shell
+git diff origin/<branch-name> -- FILE_PATH
+```
+
+This will show the local content as removed (red, marked with `-`) lines and the origin's content as added (green, marked with `+`) lines.
+
+To query the branch name:
+```shell
+# Fish shell.
+git diff origin/(git branch --show-current) -- MY_FILE
+
+# Bash shell:
+git diff origin/`git branch --show-current) -- MY_FILE
+```
 
 # TODO
 
