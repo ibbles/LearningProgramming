@@ -191,6 +191,7 @@ The residuality process will help you find them.
 ## Stressor
 
 Things that may happen to a business system.
+Any fact about the context that is currently unknown.
 A stressor is associated with an attractor.
 This means that when the stressor is applied, the system tend to move towards a particular attractor.
 
