@@ -465,7 +465,7 @@ To search replace the entire buffer and not just the current line, add the all-t
 :%s/OLD/NEW/gc
 ```
 
-Let'c summarize:
+Let's summarize:
 - `:`: Start a (name?) command
 - `%`: Operate on all things, in this case lines in the buffer.
 - `s`: Start a `sed`-like search/replace.
