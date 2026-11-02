@@ -247,6 +247,11 @@ Selecting between brackets (`(){}[]<>` I assume all of these work.):
 Run these two after each other to rewrap a paragram.
 Binding this to a keyboard shortcut is a good idea if you write a lot of text.
 
+To do visual line wrap word wrap soft wrap do:
+- `:set wrap`: Enable visual line wrapping.
+- `:set linebreak`: Break long lines at word boundaries.
+- `:set breakindent`: Indent continuation lines.
+
 
 # Buffers
 
@@ -375,13 +380,28 @@ Use `:w !SHELL_COMMAND` to write the current buffer's contents into the stdin of
 
 The `expandtab` setting controls whether indentation is done with tabs or spaces.
 When `expandtab` is true indentation is done with spaces.
+Disable `expandtab` by setting `noexpandtab`.
+
+```
+:set expandtab  # Pressing Tab will insert spaces.
+:set noexpandtab  # Pressing Tab will insert a tab character.
+```
 
 The `shiftwidth` setting control how wide an indentation is.
 If `shiftwidth` is 0 then `tabstop` is used instead.
 
 A literal tab character (`\t`) is rendered `tabstop`  wide.
 
-`~/.config/vim/init.vim`
+`~/.config/nvim/init.lua`:
+```lua
+local o = vim.opt
+o.expandtab = true  # Insert spaces when indenting.
+o.tabstop = 4  # Set how wide a tab character should be rendered.
+o.shiftwidth = 0  # Use tabstop as the width for indentation as well.
+```
+
+
+`~/.config/vim/init.vim`:
 ```
 set tabsop=8
 
@@ -392,6 +412,9 @@ set softtabstop=4
 - `>>`/`<<`: Indendt and unindent the current line.
 - `==`: Auto-indent the current line.
 - `#==`: Where `#` is a number, auto-indent the next `#` lines.
+
+
+See [_Vim 'Indentation Hell': A Best Effor Guide_](https://gist.github.com/LunarLambda/4c444238fb364509b72cfb891979f1dd).
 
 
 # Search
@@ -584,4 +607,5 @@ For example: `set shiftwidth`
 - 8: [_Vim As Your Editor_  by ThePrimeagen @ youtube.com 2022](https://www.youtube.com/playlist?list=PLm323Lc7iSW_wuxqmKx_xxNtJC_hJbQ7R)
 - 9: [_Macros in Vi editor_](https://www.geeksforgeeks.org/linux-unix/macros-in-vi-editor/)
 - 10: [_Neovim docs_ > _Motion_ > _Jump_ @ neovim.io](https://neovim.io/doc/user/motion/#jump-motions)
+- 11: [_Vim 'Indentation Hell': A Best Effort Guide_ by Lunar Lamda @ gist.github.com 2019](https://gist.github.com/LunarLambda/4c444238fb364509b72cfb891979f1dd)
 
